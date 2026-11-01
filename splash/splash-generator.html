@@ -1,0 +1,183 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0;background:transparent">
+<canvas id="c" width="1200" height="1000"></canvas>
+<script>
+const W=1200,H=1000;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function noise2(seed){const R=mulberry32(seed);const p=[...Array(256).keys()];for(let i=255;i>0;i--){const j=Math.floor(R()*(i+1));[p[i],p[j]]=[p[j],p[i]]}const P=new Uint16Array(512);for(let i=0;i<512;i++)P[i]=p[i&255];const G=new Float32Array(256).map(()=>R());const f=t=>t*t*(3-2*t);
+ return (x,y)=>{const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi;const h=(a,b)=>G[P[(P[a&255]+(b&255))&511]&255];const u=f(xf),v=f(yf);return (h(xi,yi)*(1-u)+h(xi+1,yi)*u)*(1-v)+(h(xi,yi+1)*(1-u)+h(xi+1,yi+1)*u)*v}}
+function fbm(n,x,y,o=4){let a=0,amp=.5,fr=1,s=0;for(let i=0;i<o;i++){a+=amp*n(x*fr+i*13.1,y*fr-i*7.7);s+=amp;fr*=2;amp*=.5}return a/s}
+const hex=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const rgba=(c,a=1)=>`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${a})`;
+const mix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const smooth=(e0,e1,x)=>{const t=clamp((x-e0)/(e1-e0),0,1);return t*t*(3-2*t)};
+
+const PAL={
+ repair:{cols:['#FBEFEA','#F9CFD6','#F4A9BA','#E7849E','#D9C6E4','#B8AEE0','#C3D7F1','#8EAFE3','#FFFFFF','#F6E3C8'],ink:'#1D2669'},
+ sleep:{cols:['#F1ECFA','#DCD2F3','#BDB5EA','#9C9EDC','#7884CB','#4F5BA8','#2E3A7A','#FFFFFF','#EEE2B8','#C7D8F0'],ink:'#151C4F'},
+ energy:{cols:['#FFF3EA','#FFD9C7','#FFBEA6','#F7987E','#FBCF9E','#F3DB8C','#F7EAC8','#FFFFFF','#F2A7B6','#E8C26A'],ink:'#2A2346'},
+ gut:{cols:['#F2FAF4','#D3EFE2','#B5E3D2','#8FD0C3','#9FCBE6','#6EB2CF','#E9F1C9','#FFFFFF','#C9E7A8','#4E9DB8'],ink:'#14304A'},
+ beauty:{cols:['#FFF1EC','#FBD3DC','#F5B0C3','#EC8EAA','#F7C9B5','#F3DCC0','#E6C3E3','#FFFFFF','#D99BC3','#F9E7D3'],ink:'#3A1E3F'}
+};
+
+const q=new URLSearchParams(location.hash.slice(1));
+const STYLE=q.get('style')||'crystal',PALK=q.get('pal')||'repair',SEED=+(q.get('seed')||1);
+const pal=PAL[PALK],cols=pal.cols.map(hex),INK=hex(pal.ink);
+const R=mulberry32(SEED*7919+STYLE.length*31);
+const N1=noise2(SEED*11+1),N2=noise2(SEED*13+5),N3=noise2(SEED*17+9);
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+
+/* ---- splash mask: an elongated, ragged patch anchored in the upper right ---- */
+const CX=760,CY=360,ANG=-0.62;
+function shapeR(th){return 1+0.55*(fbm(N1,Math.cos(th)*1.3+3,Math.sin(th)*1.3+3,4)-0.5)*2+0.12*Math.sin(th*3+SEED)}
+function maskD(x,y){ // <1 inside
+  const dx=x-CX,dy=y-CY,c=Math.cos(ANG),s=Math.sin(ANG);
+  let u=(dx*c-dy*s)/430,v=(dx*s+dy*c)/270;
+  const th=Math.atan2(v,u),r=Math.hypot(u,v);
+  return r/shapeR(th);
+}
+function mask(x,y,feather=.08){return 1-smooth(1-feather,1+feather,maskD(x,y))}
+function colorAt(x,y,jit=0){
+  const v=fbm(N2,x/360,y/360,4),w=fbm(N3,x/160,y/160,3);
+  let t=clamp((v-0.28)/0.44,0,1)*(cols.length-3)+ (w-0.5)*2.2 + (R()-0.5)*jit;
+  t=clamp(t,0,cols.length-3);const i=Math.floor(t),fr=t-i;
+  return mix(cols[i],cols[i+1],fr);
+}
+function accentPick(){const r=R();if(r<0.05)return cols[cols.length-1];if(r<0.13)return cols[cols.length-2];if(r<0.2)return cols[cols.length-3];return null}
+
+/* ---- speckles: a sweeping spray band plus strays, in the label's navy ---- */
+function speckles(n=150){
+  const pts=[];
+  for(let i=0;i<n;i++){
+    let x,y;
+    if(R()<0.78){const t=R();const bx=CX+120-t*560,by=CY-170+t*470+Math.sin(t*5+SEED)*40;const spread=26+t*70;x=bx+(R()-0.5)*2*spread*(1+R());y=by+(R()-0.5)*2*spread;}
+    else{x=CX-420+R()*700;y=CY-300+R()*680;if(mask(x,y)<0.05&&R()<0.6)continue}
+    pts.push([x,y]);
+  }
+  for(const [x,y] of pts){const rr=1.6+Math.pow(R(),2.2)*5.2;ctx.save();ctx.translate(x,y);ctx.rotate(R()*Math.PI);ctx.beginPath();ctx.ellipse(0,0,rr,rr*(0.75+R()*0.25),0,0,Math.PI*2);ctx.fillStyle=rgba(INK,0.82+R()*0.18);ctx.fill();ctx.restore()}
+}
+
+/* ---- 1. crystal facets ---- */
+function delaunay(pts){
+  const n=pts.length,P=pts.concat([[-1e5,-1e5],[1e5,-1e5],[0,1e5]]);
+  const mk=(a,b,c)=>{const [ax,ay]=P[a],[bx,by]=P[b],[cx,cy]=P[c];const d=2*(ax*(by-cy)+bx*(cy-ay)+cx*(ay-by));const ux=((ax*ax+ay*ay)*(by-cy)+(bx*bx+by*by)*(cy-ay)+(cx*cx+cy*cy)*(ay-by))/d,uy=((ax*ax+ay*ay)*(cx-bx)+(bx*bx+by*by)*(ax-cx)+(cx*cx+cy*cy)*(bx-ax))/d;return {v:[a,b,c],x:ux,y:uy,r2:(ax-ux)**2+(ay-uy)**2}};
+  let tris=[mk(n,n+1,n+2)];
+  for(let i=0;i<n;i++){const [px,py]=P[i];const bad=[],keep=[];for(const t of tris)((px-t.x)**2+(py-t.y)**2<t.r2?bad:keep).push(t);
+    const ec=new Map();for(const t of bad){for(const [a,b] of [[t.v[0],t.v[1]],[t.v[1],t.v[2]],[t.v[2],t.v[0]]]){const k=a<b?a+'_'+b:b+'_'+a;ec.set(k,(ec.get(k)||0)+1)}}
+    tris=keep;for(const t of bad)for(const [a,b] of [[t.v[0],t.v[1]],[t.v[1],t.v[2]],[t.v[2],t.v[0]]]){const k=a<b?a+'_'+b:b+'_'+a;if(ec.get(k)===1)tris.push(mk(a,b,i))}}
+  return tris.filter(t=>t.v.every(v=>v<n)).map(t=>t.v.map(v=>P[v]));
+}
+function crystal(){
+  const pts=[];
+  const foci=[...Array(4)].map(()=>[CX-300+R()*520,CY-220+R()*420]);
+  for(let i=0;i<9000&&pts.length<170;i++){
+    let x,y;
+    if(R()<0.55){const f=foci[Math.floor(R()*foci.length)];x=f[0]+gauss()*90;y=f[1]+gauss()*70}else{x=CX-560+R()*900;y=CY-420+R()*820}
+    const d=maskD(x,y);if(d<0.97)pts.push([x,y,0]);
+  }
+  const nb=44;
+  for(let i=0;i<nb;i++){const th=i/nb*Math.PI*2+(R()-0.5)*0.08;const spike=R()<0.3;const r=shapeR(th)*(spike?1.12+R()*0.28:0.93+R()*0.06);
+    const u=Math.cos(th)*r*430,v=Math.sin(th)*r*270,c=Math.cos(-ANG),s=Math.sin(-ANG);pts.push([CX+u*c-v*s,CY+u*s+v*c,spike?2:1])}
+  const tris=delaunay(pts).filter(t=>{
+    const cx=(t[0][0]+t[1][0]+t[2][0])/3,cy=(t[0][1]+t[1][1]+t[2][1])/3;
+    const spikes=t.filter(p=>p[2]===2).length;
+    if(spikes===0)return maskD(cx,cy)<1.0;
+    if(spikes===1)return t.filter(p=>p[2]!==2).every(p=>maskD(p[0],p[1])<1.02)&&Math.hypot(t[0][0]-t[1][0],t[0][1]-t[1][1])<240;
+    return false});
+  for(const t of tris){
+    const cx=(t[0][0]+t[1][0]+t[2][0])/3,cy=(t[0][1]+t[1][1]+t[2][1])/3;
+    let c=accentPick()||colorAt(cx,cy,2.2);
+    const light=mix(c,[255,255,255],0.45+R()*0.35),dark=mix(c,INK,0.12+R()*0.2);
+    const i0=Math.floor(R()*3),a=t[i0],b=t[(i0+1)%3],d=t[(i0+2)%3];
+    const g=ctx.createLinearGradient(a[0],a[1],(b[0]+d[0])/2,(b[1]+d[1])/2);
+    const k=R();
+    if(k<0.4){g.addColorStop(0,rgba(light));g.addColorStop(1,rgba(c))}else if(k<0.8){g.addColorStop(0,rgba(c));g.addColorStop(1,rgba(dark))}else{g.addColorStop(0,rgba(light));g.addColorStop(0.55,rgba(c));g.addColorStop(1,rgba(dark))}
+    ctx.beginPath();ctx.moveTo(t[0][0],t[0][1]);ctx.lineTo(t[1][0],t[1][1]);ctx.lineTo(t[2][0],t[2][1]);ctx.closePath();ctx.fillStyle=g;ctx.fill();
+    ctx.lineWidth=1;ctx.strokeStyle=R()<0.75?'rgba(255,255,255,0.7)':rgba(INK,0.18);ctx.stroke();
+  }
+  for(let i=0;i<10;i++){const x=CX-300+R()*560,y=CY-260+R()*480;if(maskD(x,y)>0.8)continue;const L=50+R()*130,a=R()*Math.PI*2;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+Math.cos(a)*L,y+Math.sin(a)*L);ctx.lineTo(x+Math.cos(a+0.3)*L*0.6,y+Math.sin(a+0.3)*L*0.6);ctx.closePath();ctx.fillStyle='rgba(255,255,255,0.42)';ctx.fill()}
+
+}
+
+/* ---- 2. ink bloom (layered watercolour) ---- */
+function gauss(){let u=0,v=0;while(!u)u=R();while(!v)v=R();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function deform(poly,depth,vari){
+  let pts=poly;
+  for(let d=0;d<depth;d++){const out=[];for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];out.push(a);const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,len=Math.hypot(b[0]-a[0],b[1]-a[1]);const v=a[2]*vari;out.push([mx+gauss()*len*v,my+gauss()*len*v,(a[2]+b[2])/2*(0.8+R()*0.4)])}pts=out}
+  return pts;
+}
+function blob(x,y,r,c,layers=46,alpha=0.03){
+  let base=[];const n=12;for(let i=0;i<n;i++){const a=i/n*Math.PI*2;const rr=r*(0.8+R()*0.4);base.push([x+Math.cos(a)*rr,y+Math.sin(a)*rr*0.85,0.3+R()*0.9])}
+  base=deform(base,3,0.42);
+  for(let l=0;l<layers;l++){const p=deform(base,3,0.38);ctx.beginPath();ctx.moveTo(p[0][0],p[0][1]);for(const q of p)ctx.lineTo(q[0],q[1]);ctx.closePath();ctx.fillStyle=rgba(c,alpha);ctx.fill();if(l%6===0){ctx.lineWidth=1.2;ctx.strokeStyle=rgba(mix(c,INK,0.2),0.05);ctx.stroke()}}
+}
+function ink(){
+  ctx.globalCompositeOperation='source-over';
+  const blobs=[];
+  for(let i=0;i<120&&blobs.length<11;i++){const x=CX-420+R()*720,y=CY-300+R()*600;const d=maskD(x,y);if(d>0.85)continue;blobs.push([x,y,(1-d)*150+60])}
+  blobs.sort((a,b)=>b[2]-a[2]);
+  for(const [x,y,r] of blobs){const c=accentPick()||colorAt(x,y,2.4);blob(x,y,r,c,48,0.034)}
+  // inner pools of deeper pigment
+  for(let i=0;i<7;i++){const [x,y,r]=blobs[Math.floor(R()*blobs.length)];const c=mix(colorAt(x,y,2),INK,0.12);blob(x+(R()-0.5)*r*0.6,y+(R()-0.5)*r*0.6,r*0.35,c,30,0.04)}
+  // granulation
+  for(let i=0;i<5000;i++){const x=CX-460+R()*820,y=CY-360+R()*760;const m=mask(x,y,0.2);if(R()>m*0.9)continue;ctx.fillStyle=rgba(mix(colorAt(x,y,1),INK,0.25),0.18*R());ctx.fillRect(x,y,1.2,1.2)}
+
+}
+
+/* ---- 3. powder spray ---- */
+function powder(){
+  for(let i=0;i<520000;i++){
+    const x=CX-560+R()*940,y=CY-430+R()*860;
+    const m=mask(x,y,0.35),n=fbm(N3,x/120,y/120,4);
+    const dens=Math.pow(m,1.4)*(0.25+1.1*n*n);
+    if(R()>dens*1.05)continue;
+    const big=R()<0.015;const rr=big?1.8+R()*2.6:0.5+R()*1.3;
+    const c=accentPick()||colorAt(x,y,1.2);
+    ctx.beginPath();ctx.arc(x,y,rr,0,Math.PI*2);ctx.fillStyle=rgba(c,0.55+R()*0.45);ctx.fill();
+  }
+  // a few denser veils
+  for(let i=0;i<9;i++){const x=CX-260+R()*460,y=CY-200+R()*380;const c=colorAt(x,y,2);for(let j=0;j<5000;j++){const a=R()*Math.PI*2,r=Math.abs(gauss())*60*(0.6+R());const px=x+Math.cos(a)*r*1.6,py=y+Math.sin(a)*r;if(mask(px,py,0.3)<0.3)continue;ctx.fillStyle=rgba(c,0.5);ctx.fillRect(px,py,1.3,1.3)}}
+
+}
+
+/* ---- 4. cusp grain: the Zab single/double-cusp units as texture ---- */
+const QD=[[1,1],[-1,1],[-1,-1],[1,-1]];
+function nodePath(cx,cy,t,D){const RR=D*(1-Math.SQRT1_2),RA=D*Math.SQRT1_2,Hh=D/2,ax=[[RR,0],[0,RR],[-RR,0],[0,-RR]];const p=new Path2D();p.moveTo(cx+RR,cy);
+  for(let q=0;q<4;q++){const e=ax[(q+1)%4],ex=cx+e[0],ey=cy+e[1];
+    if(t[q]){const kx=cx+QD[q][0]*Hh,ky=cy+QD[q][1]*Hh;
+      // arc 1 centred on horizontal/vertical neighbour
+      const n1=q%2===0?[cx+QD[q][0]*D,cy]:[cx,cy+QD[q][1]*D], n2=q%2===0?[cx,cy+QD[q][1]*D]:[cx+QD[q][0]*D,cy];
+      const sa=Math.atan2(cy+ax[q][1]-n1[1],cx+ax[q][0]-n1[0]),ea=Math.atan2(ky-n1[1],kx-n1[0]);p.arc(n1[0],n1[1],RA,sa,ea,true);
+      const sb=Math.atan2(ky-n2[1],kx-n2[0]),eb=Math.atan2(ey-n2[1],ex-n2[0]);p.arc(n2[0],n2[1],RA,sb,eb,true);
+    }else p.arc(cx,cy,RR,q*Math.PI/2,(q+1)*Math.PI/2,false);}
+  p.closePath();return p}
+function grain(){
+  const D=+(q.get('d')||62);
+  const nodes=new Map(),key=(i,j)=>i+','+j;
+  const i0=Math.floor((CX-600)/D),i1=Math.ceil((CX+500)/D),j0=Math.floor((CY-460)/D),j1=Math.ceil((CY+460)/D);
+  for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){const x=i*D,y=j*D;const d=maskD(x,y);if(d>1.02)continue;const keepP=d<0.8?0.9:0.9-(d-0.8)*3.5;if(R()<keepP)nodes.set(key(i,j),{i,j,t:[0,0,0,0]})}
+  const corner=new Set();const deg=n=>n.t[0]+n.t[1]+n.t[2]+n.t[3];
+  const arr=[...nodes.values()].sort(()=>R()-0.5);
+  for(let pass=0;pass<2;pass++)for(const n of arr){
+    if(deg(n)>=2)continue;
+    const qs=[0,1,2,3].sort(()=>R()-0.5);
+    for(const qd of qs){if(R()>0.9)continue;const [sx,sy]=QD[qd];const m=nodes.get(key(n.i+sx,n.j+sy));if(!m||deg(m)>=2)continue;
+      const ck=(2*n.i+sx)+','+(2*n.j+sy);if(corner.has(ck))continue;
+      const oq=(qd+2)%4;if(n.t[oq]||m.t[qd])continue; // no Z shapes
+      n.t[qd]=1;m.t[oq]=1;corner.add(ck);break}
+  }
+  // drop most lone dots so the field breathes
+  for(const [k,n] of nodes)if(deg(n)===0&&R()<0.3)nodes.delete(k);
+  for(const n of nodes.values()){
+    const x=n.i*D,y=n.j*D,m=mask(x,y,0.25);
+    let c=R()<0.04?cols[cols.length-2]:colorAt(x,y,0.35);
+    const g=ctx.createLinearGradient(x,y-D*0.6,x,y+D*0.6);g.addColorStop(0,rgba(mix(c,[255,255,255],0.18)));g.addColorStop(1,rgba(c));
+    ctx.fillStyle=g;ctx.globalAlpha=clamp(0.35+m*0.75,0,1);ctx.fill(nodePath(x,y,n.t,D));
+  }
+  ctx.globalAlpha=1;
+
+}
+
+({crystal,ink,powder,grain})[STYLE]();
+window.DONE=true;
+</script></body></html>
