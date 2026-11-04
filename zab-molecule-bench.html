@@ -184,7 +184,7 @@ textarea{min-height:90px;font-family:var(--font-mono);font-size:11.5px;resize:ve
     <div class="brand" id="brandIcon" aria-hidden="true"></div>
     <div>
       <h1>Zab 分子纹理工作台</h1>
-      <div class="sub">单尖 + 双尖 · 方格对角连接 · 每个产品一枚纹理指纹</div>
+      <div class="sub">细线十字阵列 · 每个产品一枚纹理指纹</div>
     </div>
     <nav class="tabs" role="tablist" aria-label="视图">
       <button role="tab" data-view="edit" id="tab-edit">编辑</button>
@@ -198,7 +198,7 @@ textarea{min-height:90px;font-family:var(--font-mono);font-size:11.5px;resize:ve
       <div class="rail-head">
         <span class="eyebrow">产品系列</span>
         <div>
-          <button class="btn small" id="addP" title="新建空白产品">新建</button>
+          <button class="btn small" id="addP" title="新建产品">新建</button>
           <button class="btn small" id="dupP" title="复制当前产品">复制</button>
         </div>
       </div>
@@ -209,8 +209,9 @@ textarea{min-height:90px;font-family:var(--font-mono);font-size:11.5px;resize:ve
       <section id="v-edit">
         <div class="toolbar">
           <div class="seg" role="group" aria-label="工具">
-            <button data-tool="build" id="tool-build">搭建<kbd>B</kbd></button>
+            <button data-tool="build" id="tool-build">添加<kbd>B</kbd></button>
             <button data-tool="erase" id="tool-erase">擦除<kbd>E</kbd></button>
+            <button data-tool="size" id="tool-size">大小<kbd>S</kbd></button>
             <button data-tool="fade" id="tool-fade">淡化<kbd>F</kbd></button>
           </div>
           <div class="seg" role="group" aria-label="撤销">
@@ -222,6 +223,7 @@ textarea{min-height:90px;font-family:var(--font-mono);font-size:11.5px;resize:ve
           <div class="stepper">行 <button class="btn small" data-step="rows:-1" aria-label="减少行">−</button><b id="rowsV">5</b><button class="btn small" data-step="rows:1" aria-label="增加行">+</button></div>
           <span class="sep"></span>
           <label class="check" style="align-items:center"><input type="checkbox" id="showGrid"> 格点</label>
+          <span class="muted mono" id="countV"></span>
           <button class="btn small primary" id="quickPng" style="margin-left:auto">导出透明 PNG</button>
           <button class="btn small danger" id="clearB">清空画布</button>
         </div>
@@ -230,7 +232,7 @@ textarea{min-height:90px;font-family:var(--font-mono);font-size:11.5px;resize:ve
       </section>
 
       <section id="v-label" hidden>
-        <p class="lede">左边是现在的做法；右边学 Thorne：纹理放大，放在白色区域的右上角，并从标签边缘裁出去，深蓝色带只留给文字。下面三个滑杆只调右边。</p>
+        <p class="lede">左边是现在的做法；右边学 Thorne：纹理放大，放在白色区域的右上角，并从标签边缘裁出去，深蓝色带只留给文字。下面的滑杆只调右边。</p>
         <div class="labels">
           <div class="lcard">
             <div class="lcap"><span class="pill now">现状</span><strong>图案放在色带里</strong></div>
@@ -251,7 +253,7 @@ textarea{min-height:90px;font-family:var(--font-mono);font-size:11.5px;resize:ve
 
       <section id="v-series" hidden>
         <div class="row" style="justify-content:space-between;margin-bottom:12px">
-          <p class="lede" style="margin:0">几何和位置全系列不变；每个产品只换两样：颜色跟功效线走，排列跟成分类型和产品名走。点卡片进入编辑。</p>
+          <p class="lede" style="margin:0">十字的画法和位置全系列不变；每个产品只换两样：颜色跟功效线走，排列跟产品名走。点卡片进入编辑。</p>
           <div style="width:220px"><div class="field">色带颜色<div class="hexrow"><input type="color" id="bandPick2" aria-label="选择色带颜色"><input type="text" id="bandHex2" maxlength="7" spellcheck="false" autocomplete="off" placeholder="#1D2669" aria-label="色带色号"></div></div></div>
           <div class="seg" role="group" aria-label="图案位置">
             <button data-place="corner" id="place-corner">右上角出血</button>
@@ -265,13 +267,15 @@ textarea{min-height:90px;font-family:var(--font-mono);font-size:11.5px;resize:ve
     <aside class="insp" aria-label="属性">
       <section class="panel sec" id="selSec"></section>
 
-      <details class="panel sec" open id="ruleSec">
-        <summary>规则检查</summary>
-        <div class="stats" id="stats"></div>
-        <div id="issueBox"></div>
-        <div class="stack" style="margin-top:10px">
-          <label class="check"><input type="checkbox" id="ruleDD"><span>允许双尖接双尖<small>图1正中就有一处，关掉后只能拼出「单–单」「单–双–单」</small></span></label>
-          <label class="check"><input type="checkbox" id="ruleZ"><span>允许 Z 形双尖<small>两个尖方向相反，是一种新形状，默认关</small></span></label>
+      <details class="panel sec" open id="strokeSec">
+        <summary>十字的画法</summary>
+        <div class="stack">
+          <label class="field">笔画粗细 <span class="mono" id="strokeV"></span><input type="range" id="stroke" min="3" max="18" step="0.5"></label>
+          <label class="field">整体大小 <span class="mono" id="scaleV"></span><input type="range" id="sizeMul" min="0.6" max="1.6" step="0.05"></label>
+          <div class="seg" role="group" aria-label="笔画端头" style="align-self:flex-start">
+            <button data-cap="butt" id="cap-butt">平头</button>
+            <button data-cap="round" id="cap-round">圆头</button>
+          </div>
         </div>
       </details>
 
@@ -284,8 +288,7 @@ textarea{min-height:90px;font-family:var(--font-mono);font-size:11.5px;resize:ve
             <button data-mode="gradient" id="mode-gradient">三色渐变</button>
           </div>
           <div class="stack" id="palBox">
-            <div class="field">色彩场的 8 个颜色 <span style="font-size:11px">相邻两色会混合，按位置铺开</span><div class="palgrid" id="palGrid"></div></div>
-            <label class="field">点缀色 <span style="font-size:11px">约 4% 的单元</span><input type="color" id="palAcc"></label>
+            <div class="field">色彩场的 8 个颜色 <span style="font-size:11px">从浅到深，相邻两色会混合</span><div class="palgrid" id="palGrid"></div></div>
           </div>
           <div class="stack" id="gradBox">
             <div class="grid3">
@@ -302,25 +305,12 @@ textarea{min-height:90px;font-family:var(--font-mono);font-size:11.5px;resize:ve
       <details class="panel sec" open id="genSec">
         <summary>按产品生成</summary>
         <div class="stack">
-          <label class="field">结构（跟成分类型走）
-            <select id="gStyle">
-              <option value="field">颗粒场 · 分子颗粒（默认）</option>
-              <option value="molecule">分子 · 稀疏短链（单一活性物）</option>
-              <option value="crystal">晶格 · 左右对称（矿物 / 螯合）</option>
-              <option value="complex">复合 · 密集多簇（复合配方）</option>
-              <option value="particle">颗粒 · 短对密排（益生菌 / 粉剂）</option>
-            </select>
-          </label>
           <label class="field">数量 <input type="range" id="gDens" min="0.2" max="1" step="0.05"></label>
-          <label class="field nofield">聚拢程度 <input type="range" id="gTight" min="0" max="1" step="0.05"></label>
-          <label class="check nofield"><input type="checkbox" id="gAccent"><span>主角圆点<small>顶部一颗不带尖的独立圆点</small></span></label>
-          <label class="check nofield"><input type="checkbox" id="gBleed"><span>边缘出血尖<small>两侧加淡化的单尖，伸出画布边</small></span></label>
           <div class="row">
             <button class="btn primary" id="genName">按产品名生成</button>
             <button class="btn" id="genNext">换一个排列</button>
           </div>
-          <p class="muted">指纹 <span class="mono" id="seedV"></span> · 同名同结构永远生成同一个排列</p>
-          <button class="btn ghost small" id="loadFig1" style="align-self:flex-start">载入图1原稿</button>
+          <p class="muted">指纹 <span class="mono" id="seedV"></span> · 同一个指纹永远生成同一个排列</p>
         </div>
       </details>
 
@@ -371,62 +361,14 @@ textarea{min-height:90px;font-family:var(--font-mono);font-size:11.5px;resize:ve
 <script>
 (function(){
 "use strict";
-/* ---------- geometry ----------
-   Nodes sit on a square lattice (spacing D). Circle radius r = D(1-√2/2).
-   A tail toward a diagonal corner is bounded by two arcs of radius D/√2 centred on the two
-   orthogonal neighbours; both arcs are tangent to the circle and meet in a cusp at the corner.
-   Two opposite tails at one corner share those arcs, so they join into one smooth waist. */
-const D=100, RR=D*(1-Math.SQRT1_2), RA=D*Math.SQRT1_2, H=D/2;
-const Q=[[1,1],[-1,1],[-1,-1],[1,-1]];          // 0 ↘  1 ↙  2 ↖  3 ↗ (clockwise from angle 0)
-const QNAME=['右下','左下','左上','右上'];
-const QARROW=['↘','↙','↖','↗'];
-const opp=q=>(q+2)%4;
+/* ---------- the unit ----------
+   A thin plus sign on a square lattice (spacing D = 100 units). Each cell holds at most one cross:
+   s = arm length as a fraction of D, o = opacity, k = tone on the colour ramp, color = override. */
+const D=100,H=D/2,FD=44;
 const key=(c,r)=>c+','+r;
 const parseKey=k=>k.split(',').map(Number);
 const f=n=>Math.round(n*100)/100;
-
-function nodePath(cx,cy,t){
-  const ax=[[RR,0],[0,RR],[-RR,0],[0,-RR]];
-  let p=`M${f(cx+RR)},${f(cy)}`;
-  for(let q=0;q<4;q++){
-    const e=ax[(q+1)%4], ex=f(cx+e[0]), ey=f(cy+e[1]);
-    if(t[q]){
-      const kx=f(cx+Q[q][0]*H), ky=f(cy+Q[q][1]*H);
-      p+=`A${f(RA)},${f(RA)} 0 0 0 ${kx},${ky}A${f(RA)},${f(RA)} 0 0 0 ${ex},${ey}`;
-    } else p+=`A${f(RR)},${f(RR)} 0 0 1 ${ex},${ey}`;
-  }
-  return p+'Z';
-}
-
-/* ---------- palettes & styles ---------- */
-/* Product lines = the benefit categories shoppers browse supplements by (multivitamin, energy, sleep,
-   mood, brain, immune, gut, heart, blood sugar, bone & joint, sports, hair-skin-nails, women's, men's,
-   urinary, liver, eye, kids, healthy ageing). cols: 8-colour ramp for the colour field, then accent, spare. */
-const LINE_DEFS=[
-  ['multi','基础营养 · 复合维生素',['#FFF4E8','#FFE0B8','#F9C6A8','#F4A8B8','#C9B8E8','#A8C8EE','#A8DCC8','#E3DD8E','#FFFFFF','#F3D0E0']],
-  ['repair','修复 · 线粒体',['#FBEFEA','#F9CFD6','#F4A9BA','#E7849E','#D9C6E4','#B8AEE0','#C3D7F1','#8EAFE3','#FFFFFF','#F6E3C8'],['#F7B4C1','#D8C9DF','#BCD5EF']],
-  ['energy','能量 · 抗衰',['#FFF3EA','#FFD9C7','#FFBEA6','#F7987E','#FBCF9E','#F3DB8C','#F7EAC8','#FFFFFF','#F2A7B6','#E8C26A'],['#FFBFA8','#FBCF9E','#F1DC8E']],
-  ['sleep','睡眠 · 放松',['#F1ECFA','#DCD2F3','#BDB5EA','#9C9EDC','#7884CB','#4F5BA8','#2E3A7A','#FFFFFF','#EEE2B8','#C7D8F0'],['#DCCFF2','#AEB0E2','#8794CF']],
-  ['mood','情绪 · 压力',['#F6F4EE','#E3EAD6','#C9DDBE','#A9C9A8','#CFC3E6','#B3A6DA','#E7D7EE','#8E86C4','#FFFFFF','#F4E6C8']],
-  ['brain','认知 · 专注',['#EEF6FB','#CFE6F5','#A9D2EE','#7FB5E3','#8E9BE0','#7B7FD4','#B3C9F2','#5B6CC8','#FFFFFF','#C9F0EC']],
-  ['immune','免疫 · 抗氧',['#FFF8E6','#FBE7A8','#F8DE93','#F5C49F','#F2B3A0','#EBA6AE','#E59AB0','#D68FB8','#FFFFFF','#F6EBD0'],['#F8DE93','#F5C49F','#EBA6AE']],
-  ['gut','肠道 · 消化',['#F2FAF4','#D3EFE2','#B5E3D2','#8FD0C3','#9FCBE6','#6EB2CF','#E9F1C9','#FFFFFF','#C9E7A8','#4E9DB8'],['#C3EAD6','#ABDCD8','#9BC9E4']],
-  ['heart','心血管',['#FFF1F0','#FFD3D0','#FCB0AE','#F48A8F','#E86A7C','#F7B9A0','#F2C8D4','#D45570','#FFFFFF','#FBE3D3']],
-  ['metabolic','代谢 · 血糖',['#FBF8EA','#F2ECC4','#E6DB98','#D3C670','#BFD79A','#9CC38A','#EDE3B0','#7FAE7A','#FFFFFF','#F6D9A8']],
-  ['joint','关节 · 骨骼',['#FAF6EF','#EFE4D2','#E2D0B4','#CDB894','#C9D6E3','#A7BCD3','#E8DCCB','#8FA5C0','#FFFFFF','#F3E9DA']],
-  ['muscle','运动 · 肌肉',['#F4FBEA','#DDF3C3','#C2EA97','#A6DC72','#8FD6C6','#5FC2C7','#D2F0A8','#3FA8B8','#FFFFFF','#F3F7B8']],
-  ['beauty','美容 · 皮肤毛发',['#FFF1EC','#FBD3DC','#F5B0C3','#EC8EAA','#F7C9B5','#F3DCC0','#E6C3E3','#FFFFFF','#D99BC3','#F9E7D3'],['#F7B3C8','#F6C4C0','#F3D8B7']],
-  ['women','女性 · 孕产',['#FFF5F1','#FDE0D6','#F9C9BE','#F3AFB0','#E9BCD8','#D4A6CF','#FBE4D0','#C98DBE','#FFFFFF','#F7EBD5']],
-  ['men','男性健康',['#F1F4F8','#D8E1EC','#BCCBDE','#9BB0CC','#7F98BC','#5E7AA6','#C6D3E0','#3F5C8C','#FFFFFF','#D9CDB8']],
-  ['urinary','泌尿 · 蔓越莓',['#FFF3F5','#FBD7DF','#F5B4C4','#E98AA5','#D96388','#F2BFC3','#F8DDE2','#C04A73','#FFFFFF','#FAE8EC']],
-  ['liver','肝脏 · 净化',['#F5F8EE','#E0EBCF','#C8DEAD','#A8CB8C','#D7C4E4','#B9A2D6','#E9F0D8','#8E9F6E','#FFFFFF','#E8D6EE']],
-  ['eye','视力 · 护眼',['#FFFBEA','#FFF0B8','#FDE08A','#F6C85F','#BFE3D8','#8ACFC6','#F9E6A6','#5BB5B0','#FFFFFF','#E6F3DA']],
-  ['kids','儿童 · 成长',['#FFF7EC','#FFE3A8','#FFC9A8','#FFAFC0','#C9C4F2','#A8D8F5','#B8EBC8','#FFD46B','#FFFFFF','#F7C8E6']]
-];
-const LINES={};
-for(const [k,name,cols,stops] of LINE_DEFS)LINES[k]={name,cols,stops:stops||[cols[2],cols[4],cols[7]]};
-const STYLE_NAME={field:'颗粒场',molecule:'分子',crystal:'晶格',complex:'复合',particle:'颗粒'};
-const BLOCK_MSG={many:'一个圆最多只能有两个尖',corner:'这个角点已经被别的尖占用了',dd:'当前规则不允许双尖接双尖（右侧「规则检查」可放开）',z:'当前规则不允许 Z 形双尖（两尖方向相反）'};
+const clampN=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ---------- utilities ---------- */
 function uid(){return Math.random().toString(36).slice(2,9)}
@@ -435,202 +377,76 @@ function hashStr(s){let h=2166136261;for(const ch of s){h^=ch.codePointAt(0);h=M
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function lum(hex){const m=/^#?([0-9a-f]{6})$/i.exec(hex||'');if(!m)return 1;const n=parseInt(m[1],16);const ch=[n>>16&255,n>>8&255,n&255].map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*ch[0]+.7152*ch[1]+.0722*ch[2]}
 function inkFor(bg){return lum(bg)>.35?'#1D2669':'#FFFFFF'}
+function hexMix(a,b,t){const A=[1,3,5].map(i=>parseInt(a.slice(i,i+2),16)),B=[1,3,5].map(i=>parseInt(b.slice(i,i+2),16));return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('').toUpperCase()}
 
-/* ---------- analysis / rules ---------- */
-function inGridP(p,c,r){return c>=0&&r>=0&&c<p.cols&&r<p.rows}
-function tailCount(n){return n.t[0]+n.t[1]+n.t[2]+n.t[3]}
-function analyze(p,rules){
-  const issues=[],st={dot:0,single:0,double:0,links:0,dangling:0,bleed:0},corners={};
-  for(const k in p.nodes){
-    const n=p.nodes[k],[c,r]=parseKey(k),qs=[0,1,2,3].filter(q=>n.t[q]),cnt=qs.length;
-    if(cnt===0)st.dot++;else if(cnt===1)st.single++;else if(cnt===2)st.double++;
-    if(cnt>2)issues.push({lvl:'hard',type:'many',x:c,y:r,msg:`(${c},${r}) 有 ${cnt} 个尖`});
-    if(cnt===2&&qs[1]-qs[0]===2&&!rules.z)issues.push({lvl:'rule',type:'z',x:c,y:r,msg:`(${c},${r}) 是 Z 形双尖`});
-    for(const q of qs){
-      const [sx,sy]=Q[q],ck=(2*c+sx)+','+(2*r+sy);
-      (corners[ck]=corners[ck]||[]).push({c,r,q});
-      const pc=c+sx,pr=r+sy,pn=p.nodes[key(pc,pr)];
-      if(pn&&pn.t[opp(q)]){
-        if(sy===1){st.links++;if(cnt===2&&tailCount(pn)===2&&!rules.dd)issues.push({lvl:'rule',type:'dd',x:c+sx/2,y:r+sy/2,msg:`(${c},${r}) 与 (${pc},${pr}) 双尖接双尖`});}
-      } else if(!inGridP(p,pc,pr)) st.bleed++;
-      else {st.dangling++;issues.push({lvl:'warn',type:'dangling',x:c+sx/2,y:r+sy/2,msg:`(${c},${r}) 的${QNAME[q]}尖没接上`});}
-    }
-  }
-  for(const ck in corners){
-    const L=corners[ck];if(L.length<2)continue;
-    const ok=L.length===2&&L[0].c+Q[L[0].q][0]===L[1].c&&L[0].r+Q[L[0].q][1]===L[1].r;
-    if(!ok){const [kx,ky]=ck.split(',').map(Number);issues.push({lvl:'hard',type:'corner',x:kx/2,y:ky/2,msg:`一个角点上挤了 ${L.length} 个尖`});}
-  }
-  return {issues,st};
-}
+/* ---------- palettes ----------
+   "Trustworthy" system: every line takes one muted, mid-value hue; its ramp runs from a soft tint
+   through the hue and then darkens toward the brand navy, so the whole range shares one anchor. */
+const NAVY='#1D2669';
+const LINE_DEFS=[
+  ['multi','基础营养 · 复合维生素','#4A6FA5'],
+  ['repair','修复 · 线粒体','#5B67A6'],
+  ['energy','能量 · 抗衰','#B0843E'],
+  ['sleep','睡眠 · 放松','#4B5A9E'],
+  ['mood','情绪 · 压力','#6A8C78'],
+  ['brain','认知 · 专注','#3F7A9E'],
+  ['immune','免疫 · 抗氧','#B0723C'],
+  ['gut','肠道 · 消化','#3E8A82'],
+  ['heart','心血管','#A04A58'],
+  ['metabolic','代谢 · 血糖','#7A8744'],
+  ['joint','关节 · 骨骼','#6A7E98'],
+  ['muscle','运动 · 肌肉','#2F7E6E'],
+  ['beauty','美容 · 皮肤毛发','#A86C7A'],
+  ['women','女性 · 孕产','#93678A'],
+  ['men','男性健康','#3E5577'],
+  ['urinary','泌尿 · 蔓越莓','#963E58'],
+  ['liver','肝脏 · 净化','#5C7D4C'],
+  ['eye','视力 · 护眼','#A88E3E'],
+  ['kids','儿童 · 成长','#4A8CAA']
+];
+function ramp(h){const W='#FFFFFF';return [hexMix(h,W,.55),hexMix(h,W,.4),hexMix(h,W,.24),hexMix(h,W,.1),h.toUpperCase(),hexMix(h,NAVY,.25),hexMix(h,NAVY,.45),hexMix(h,NAVY,.65)]}
+const LINES={};
+for(const [k,name,hue] of LINE_DEFS)LINES[k]={name,hue,cols:ramp(hue),stops:[hexMix(hue,'#FFFFFF',.3),hue.toUpperCase(),hexMix(hue,NAVY,.5)]};
 
-/* ---------- generator ----------
-   Compact growth: the first chain starts near the middle, every later chain must start next to
-   existing shapes, and each step prefers cells with more neighbours. Many candidates are grown
-   from one seed and the tightest valid one wins, so the result reads as one interlocking block. */
-function generateNodes(p,g,rules){
-  const cols=p.cols,rows=p.rows;
-  const P={molecule:{dens:.42,lens:[2,3,3,4,4,5]},crystal:{dens:.5,lens:[2,3,3,4,4]},complex:{dens:.62,lens:[3,4,5,5,6]},particle:{dens:.5,lens:[2,2,2,3]}}[g.style]||{dens:.45,lens:[2,3,4]};
-  const lens=rules.dd?P.lens:P.lens.map(l=>Math.min(l,3));
-  const sym=g.style==='crystal';
-  const tight=g.tight==null?.8:g.tight;
-  const c0=g.bleed&&cols>=5?1:0,c1=g.bleed&&cols>=5?cols-2:cols-1;
-  const r0=g.accent&&rows>=4?1:0,r1=rows-1;
-  const mid=(cols-1)/2,half=sym?Math.ceil(cols/2)-1:c1;
-  const cxT=sym?mid:(c0+c1)/2,cyT=(r0+r1)/2;
-  const regionArea=(c1-c0+1)*(r1-r0+1);
-  const target=Math.max(4,Math.round(regionArea*P.dens*g.density*2*(sym?.5:1)));
-  const rnd=mulberry32((g.seed>>>0)*131+17);
-  const wpick=(items,ws)=>{let t=0;for(const w of ws)t+=w;if(t<=0)return items[Math.floor(rnd()*items.length)];let x=rnd()*t;for(let i=0;i<items.length;i++){x-=ws[i];if(x<=0)return items[i]}return items[items.length-1]};
-  let best=null,bestScore=-Infinity;
-  for(let attempt=0;attempt<70;attempt++){
-    const nodes={},tp={cols,rows,nodes};
-    const inGen=(c,r)=>c>=c0&&c<=Math.min(c1,half)&&r>=r0&&r<=r1;
-    const free=(c,r)=>inGen(c,r)&&!nodes[key(c,r)];
-    const has=(c,r)=>!!nodes[key(c,r)];
-    const nb=(c,r)=>{let s=0;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])if(has(c+dx,r+dy))s+=1;for(const [dx,dy] of Q)if(has(c+dx,r+dy))s+=.6;
-      if(sym&&c===half)s+=.8;/* hug the mirror axis so both halves lock together */return s};
-    const weight=(c,r)=>{const d2=(c-cxT)**2+(r-cyT)**2;return Math.pow(1+nb(c,r),1+4*tight)*Math.exp(-tight*d2/3)};
-    const cornerFree=(c,r,q)=>{const [sx,sy]=Q[q],kx=2*c+sx,ky=2*r+sy;
-      for(const [ac,ar] of [[c,r],[c+sx,r],[c,r+sy],[c+sx,r+sy]]){const n=nodes[key(ac,ar)];if(!n)continue;
-        for(let qq=0;qq<4;qq++){if(n.t[qq]&&2*ac+Q[qq][0]===kx&&2*ar+Q[qq][1]===ky)return false}}return true};
-    const mk=(c,r)=>(nodes[key(c,r)]={t:[0,0,0,0],o:1,color:null});
-    let count=0,guard=0;
-    while(count<target&&guard++<60){
-      const cand=[];
-      for(let r=r0;r<=r1;r++)for(let c=c0;c<=Math.min(c1,half);c++){if(!free(c,r))continue;if(count>0&&nb(c,r)===0)continue;cand.push([c,r])}
-      if(!cand.length)break;
-      const [sc,sr]=wpick(cand,cand.map(([c,r])=>count===0?Math.exp(-((c-cxT)**2+(r-cyT)**2)/2):weight(c,r)));
-      const len=lens[Math.floor(rnd()*lens.length)];
-      mk(sc,sr);let c=sc,r=sr,inQ=null,n=1;
-      for(let i=1;i<len;i++){
-        const opts=[0,1,2,3].filter(q=>{
-          if(inQ!==null){if(q===inQ)return false;if(Math.abs(q-inQ)===2&&!rules.z)return false}
-          return free(c+Q[q][0],r+Q[q][1])&&cornerFree(c,r,q)});
-        if(!opts.length)break;
-        const q=wpick(opts,opts.map(q=>weight(c+Q[q][0],r+Q[q][1])));
-        nodes[key(c,r)].t[q]=1;c+=Q[q][0];r+=Q[q][1];mk(c,r).t[opp(q)]=1;inQ=opp(q);n++;
-      }
-      if(n===1){delete nodes[key(sc,sr)];continue}
-      count+=n;
-    }
-    if(sym){
-      for(const k of Object.keys(nodes)){
-        const [c,r]=parseKey(k),n=nodes[k],mc=cols-1-c,mt=[n.t[1],n.t[0],n.t[3],n.t[2]];
-        if(mc===c)n.t=n.t.map((v,q)=>v|mt[q]);else nodes[key(mc,r)]={t:mt,o:n.o,color:null};
-      }
-    }
-    const core=Object.keys(nodes).length;
-    // edge bleed singles sit beside the block, like the faded pair in figure 1
-    if(g.bleed&&c0===1){
-      const sides=sym?[0]:[0,cols-1];
-      for(const side of sides){
-        const inner=side===0?1:cols-2,qs=side===0?[1,2]:[0,3];
-        const rowsOk=[];for(let r=0;r<rows;r++){if(nodes[key(side,r)])continue;const w=(has(inner,r)?1:0)+(has(inner,r-1)?.6:0)+(has(inner,r+1)?.6:0);if(w>0)rowsOk.push([r,w])}
-        if(!rowsOk.length||rnd()<.25)continue;
-        const r=wpick(rowsOk.map(x=>x[0]),rowsOk.map(x=>x[1])),q=qs[Math.floor(rnd()*2)];
-        if(cornerFree(side,r,q)){const n=mk(side,r);n.t[q]=1;n.o=.35;if(sym){const m=mk(cols-1,r);m.t=[n.t[1],n.t[0],n.t[3],n.t[2]];m.o=.35}}
-      }
-    }
-    // accent dot floats above the block, ideally in the notch between two tails
-    if(g.accent&&r0===1){
-      let top=99,bx0=99,bx1=-1;
-      for(const k of Object.keys(nodes)){const [c,r]=parseKey(k);if(nodes[k].o<1)continue;top=Math.min(top,r);bx0=Math.min(bx0,c);bx1=Math.max(bx1,c)}
-      const ar=top-1,cand=[];
-      if(ar>=0)for(let c=bx0;c<=bx1;c++){if(sym&&c!==Math.round(mid))continue;if(has(c,ar)||has(c-1,ar)||has(c+1,ar))continue;
-        const w=(has(c,top)?.1:1)*(1+(has(c-1,top)?2:0)+(has(c+1,top)?2:0));cand.push([c,w])}
-      if(cand.length)mk(wpick(cand.map(x=>x[0]),cand.map(x=>x[1])),ar);
-    }
-    const an=analyze(tp,rules);
-    if(an.issues.length||core<3)continue;
-    // score: neighbours per node, links, small bounding box, close to target size
-    let x0=99,y0=99,x1=-1,y1=-1,nbs=0;
-    for(const k of Object.keys(nodes)){const [c,r]=parseKey(k);if(nodes[k].o<1||g.accent&&tailCount(nodes[k])===0)continue;x0=Math.min(x0,c);x1=Math.max(x1,c);y0=Math.min(y0,r);y1=Math.max(y1,r);nbs+=nb(c,r)}
-    const fill=core/((x1-x0+1)*(y1-y0+1));
-    const score=nbs/core+2.5*fill+an.st.links/core-Math.abs(core-target*(sym?2:1))/(target*2)+rnd()*.15;
-    if(score>bestScore){bestScore=score;best=JSON.parse(JSON.stringify(nodes))}
-  }
-  return best||{};
-}
-
-/* ---------- grain field ----------
-   Same algorithm and seed handling as the "分子颗粒" splash study: an organic patch on a 62px
-   lattice, ~90% of points filled, random bent links (no Z), lone dots thinned, edges fading.
-   Each node keeps a tone k (position on the 8-colour ramp, -1 = accent) so palettes can change later. */
-const FD=62;
+/* ---------- noise + cross field (same algorithm as the "01 细线十字" proof) ---------- */
 function noise2(seed){const R=mulberry32(seed);const p=[...Array(256).keys()];for(let i=255;i>0;i--){const j=Math.floor(R()*(i+1));[p[i],p[j]]=[p[j],p[i]]}const P=new Uint16Array(512);for(let i=0;i<512;i++)P[i]=p[i&255];const G=new Float32Array(256).map(()=>R());const sm=t=>t*t*(3-2*t);
   return (x,y)=>{const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi;const h=(a,b)=>G[P[(P[a&255]+(b&255))&511]&255];const u=sm(xf),v=sm(yf);return (h(xi,yi)*(1-u)+h(xi+1,yi)*u)*(1-v)+(h(xi,yi+1)*(1-u)+h(xi+1,yi+1)*u)*v}}
 function fbm(n,x,y,o){let a=0,amp=.5,fr=1,s=0;for(let i=0;i<o;i++){a+=amp*n(x*fr+i*13.1,y*fr-i*7.7);s+=amp;fr*=2;amp*=.5}return a/s}
 const noiseCache={};
 function fieldNoise(seed){return noiseCache[seed]||(noiseCache[seed]={N1:noise2(seed*11+1),N2:noise2(seed*13+5),N3:noise2(seed*17+9)})}
-const clampN=(v,a,b)=>Math.max(a,Math.min(b,v));
 function fieldTone(seed,x,y){const {N2,N3}=fieldNoise(seed);const v=fbm(N2,x/360,y/360,4),w=fbm(N3,x/160,y/160,3);return clampN((v-0.28)/0.44,0,1)*7+(w-0.5)*2.2}
-function generateField(g,rules){
-  const SEED=g.seed>>>0,R=mulberry32(SEED*7919+5*31),{N1}=fieldNoise(SEED);
+function generateField(g){
+  const SEED=g.seed>>>0,R=mulberry32(SEED*7919+5*31),{N1,N3}=fieldNoise(SEED);
   const CX=760,CY=360,ANG=-0.62;
   const shapeR=th=>1+0.55*(fbm(N1,Math.cos(th)*1.3+3,Math.sin(th)*1.3+3,4)-0.5)*2+0.12*Math.sin(th*3+SEED);
   const maskD=(x,y)=>{const dx=x-CX,dy=y-CY,c=Math.cos(ANG),s=Math.sin(ANG);const u=(dx*c-dy*s)/430,v=(dx*s+dy*c)/270;return Math.hypot(u,v)/shapeR(Math.atan2(v,u))};
   const sm=(e0,e1,x)=>{const t=clampN((x-e0)/(e1-e0),0,1);return t*t*(3-2*t)};
-  const mask=(x,y,fe)=>1-sm(1-fe,1+fe,maskD(x,y));
-  const nodes=new Map(),kk=(i,j)=>i+','+j;
-  const i0=Math.floor((CX-600)/FD),i1=Math.ceil((CX+500)/FD),j0=Math.floor((CY-460)/FD),j1=Math.ceil((CY+460)/FD);
-  for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){const x=i*FD,y=j*FD,d=maskD(x,y);if(d>1.02)continue;
-    const keepP=Math.min(0.98,(d<0.8?0.9:0.9-(d-0.8)*3.5)*g.density*2);if(R()<keepP)nodes.set(kk(i,j),{i,j,t:[0,0,0,0]})}
-  const corner=new Set(),deg=n=>n.t[0]+n.t[1]+n.t[2]+n.t[3];
-  const partner=n=>{for(let q=0;q<4;q++)if(n.t[q])return nodes.get(kk(n.i+Q[q][0],n.j+Q[q][1]));return null};
-  const arr=[...nodes.values()].sort(()=>R()-0.5);
-  for(let pass=0;pass<2;pass++)for(const n of arr){
-    if(deg(n)>=2)continue;
-    const qs=[0,1,2,3].sort(()=>R()-0.5);
-    for(const qd of qs){if(R()>0.9)continue;const [sx,sy]=Q[qd];const m=nodes.get(kk(n.i+sx,n.j+sy));if(!m||deg(m)>=2)continue;
-      const ck=(2*n.i+sx)+','+(2*n.j+sy);if(corner.has(ck))continue;
-      const oq=(qd+2)%4;if(n.t[oq]||m.t[qd])continue;
-      if(!rules.dd){const a=deg(n)+1,b=deg(m)+1;if(a===2&&b===2)continue;if(a===2&&deg(partner(n))===2)continue;if(b===2&&deg(partner(m))===2)continue}
-      n.t[qd]=1;m.t[oq]=1;corner.add(ck);break}
+  const keep=Math.min(0.98,0.92*g.density*2);
+  const pts=[];
+  for(let x=Math.floor((CX-620)/FD)*FD;x<CX+520;x+=FD)for(let y=Math.floor((CY-480)/FD)*FD;y<CY+480;y+=FD){
+    const d=maskD(x,y);if(d>1.05)continue;const kp=d<0.8?keep:keep-(d-0.8)*3.2;if(R()<kp)pts.push([x,y,d]);
   }
-  for(const [k,n] of nodes)if(deg(n)===0&&R()<0.3)nodes.delete(k);
-  let a0=1e9,b0=1e9,a1=-1e9,b1=-1e9;
-  for(const n of nodes.values()){
-    const x=n.i*FD,y=n.j*FD,m=mask(x,y,0.25);
-    if(R()<0.04)n.k=-1;else n.k=Math.round(clampN(fieldTone(SEED,x,y)+(R()-0.5)*0.35,0,7)*1000)/1000;
-    n.o=Math.round(clampN(0.35+m*0.75,0,1)*100)/100;
-    a0=Math.min(a0,n.i);b0=Math.min(b0,n.j);a1=Math.max(a1,n.i);b1=Math.max(b1,n.j);
+  let a0=1e9,b0=1e9,a1=-1e9,b1=-1e9;const tmp=[];
+  for(const [x,y,d] of pts){
+    const n=fbm(N3,x/140,y/140,3);const s=0.16+0.22*(1-d*0.55)+0.12*n;
+    const k=clampN(fieldTone(SEED,x,y)+(R()-0.5)*0.4,0,7);
+    const o=clampN(0.3+(1-sm(0.75,1.05,d))*0.75,0,1);
+    const i=Math.round(x/FD),j=Math.round(y/FD);
+    a0=Math.min(a0,i);b0=Math.min(b0,j);a1=Math.max(a1,i);b1=Math.max(b1,j);
+    tmp.push({i,j,s:Math.round(s*1000)/1000,k:Math.round(k*1000)/1000,o:Math.round(o*100)/100});
   }
-  const out={};
-  for(const n of nodes.values())out[key(n.i-a0,n.j-b0)]={t:n.t,o:n.o,k:n.k,color:null};
-  return {nodes:out,cols:a1-a0+1,rows:b1-b0+1,field:{seed:SEED,ox:a0,oy:b0}};
+  const nodes={};for(const t of tmp)nodes[key(t.i-a0,t.j-b0)]={s:t.s,o:t.o,k:t.k,color:null};
+  return {nodes,cols:a1-a0+1,rows:b1-b0+1,field:{seed:SEED,ox:a0,oy:b0}};
 }
-function applyField(p,rules){const r=generateField(p.gen,rules);p.nodes=r.nodes;p.cols=r.cols;p.rows=r.rows;p.field=r.field;p.mode='field'}
-function hexMix(a,b,t){const A=[1,3,5].map(i=>parseInt(a.slice(i,i+2),16)),B=[1,3,5].map(i=>parseInt(b.slice(i,i+2),16));return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')}
+function applyField(p){const r=generateField(p.gen);p.nodes=r.nodes;p.cols=r.cols;p.rows=r.rows;p.field=r.field}
 function nodeFill(p,n,c,r){
   if(n.color)return n.color;
-  const pal=p.pal||LINES[p.line].cols;
-  let k=n.k;
+  const pal=p.pal;let k=n.k;
   if(k==null){const ox=p.field?p.field.ox:0,oy=p.field?p.field.oy:0,sd=p.field?p.field.seed:(p.gen.seed>>>0);k=clampN(fieldTone(sd,(c+ox)*FD,(r+oy)*FD),0,7)}
-  if(k<0)return pal[8];
   const i=Math.min(6,Math.floor(k));return hexMix(pal[i],pal[i+1],k-i);
 }
 
-/* ---------- presets ---------- */
-function fig1Nodes(){
-  const n={};const add=(c,r,qs,o=1)=>{const t=[0,0,0,0];qs.forEach(q=>t[q]=1);n[key(c,r)]={t,o,color:null}};
-  add(3,0,[]);
-  add(0,1,[1],.35);add(2,1,[1,0]);add(4,1,[1]);
-  add(1,2,[3]);add(2,2,[0]);add(3,2,[2,3]);add(5,2,[3],.35);
-  add(2,3,[1]);add(3,3,[2,1]);
-  add(1,4,[3]);add(2,4,[3]);
-  return n;
-}
-function newProduct(o){
-  const p=Object.assign({id:uid(),name:'New Product',example:false,line:'repair',cols:7,rows:6,nodes:{},
-    stops:null,pal:null,mode:'field',field:null,angle:0,bg:'#FFFFFF',band:['ULTRA','SENSITIVE','REPAIR'],count:'90 CAPSULES',servings:'30'},o||{});
-  p.gen=Object.assign({style:'field',density:.5,tight:.8,accent:true,bleed:true,seed:1},o&&o.gen||{});
-  if(!LINES[p.line])p.line='repair';
-  if(!p.stops)p.stops=LINES[p.line].stops.slice();
-  if(!p.pal)p.pal=LINES[p.line].cols.slice();
-  return p;
-}
-const DEFAULT_SEEDS={'Urolithin A':1,'Magnesium Glycinate':2,'NMN':4,'Probiotic 50B':5,'Marine Collagen':3};
+/* ---------- products ---------- */
 const EXAMPLES=[
   {name:'Urolithin A',line:'repair',band:['ULTRA','SENSITIVE','REPAIR'],count:'90 SOFTGEL',servings:'30',seed:1,example:false},
   {name:'Daily Multivitamin',line:'multi',band:['DAILY','ESSENTIAL','MULTI'],count:'60 CAPSULES',servings:'30',seed:6},
@@ -652,81 +468,81 @@ const EXAMPLES=[
   {name:'Lutein + Zeaxanthin',line:'eye',band:['VISION','EYE','HEALTH'],count:'60 SOFTGELS',servings:'60',seed:18},
   {name:'Kids Multi Gummies',line:'kids',band:['KIDS','GROWTH','DAILY'],count:'60 GUMMIES',servings:'30',seed:19}
 ];
-function exampleProduct(e,rules){const p=newProduct({name:e.name,example:e.example!==false,line:e.line,band:e.band,count:e.count,servings:e.servings,gen:{style:'field',seed:e.seed}});applyField(p,rules);return p}
+function newProduct(o){
+  const p=Object.assign({id:uid(),name:'New Product',example:false,line:'repair',cols:12,rows:10,nodes:{},
+    stops:null,pal:null,mode:'field',field:null,angle:0,bg:'#FFFFFF',stroke:7.3,sizeMul:1,cap:'butt',
+    band:['ULTRA','SENSITIVE','REPAIR'],count:'90 CAPSULES',servings:'30'},o||{});
+  p.gen=Object.assign({density:.5,seed:1},o&&o.gen||{});
+  if(!LINES[p.line])p.line='repair';
+  if(!p.stops)p.stops=LINES[p.line].stops.slice();
+  if(!p.pal||p.pal.length<8)p.pal=LINES[p.line].cols.slice();
+  return p;
+}
+function exampleProduct(e){const p=newProduct({name:e.name,example:e.example!==false,line:e.line,band:e.band,count:e.count,servings:e.servings,gen:{seed:e.seed}});applyField(p);return p}
 function defaults(){
-  const rules={dd:true,z:false};
-  const P=EXAMPLES.map(e=>exampleProduct(e,rules));
-  return {ver:5,products:P,current:P[0].id,rules,tool:'build',view:'edit',showGrid:true,label:{scale:1,dx:0,dy:0},place:'corner',trans:true,bandColor:'#1D2669'};
+  const P=EXAMPLES.map(exampleProduct);
+  return {ver:1,products:P,current:P[0].id,tool:'build',view:'edit',showGrid:true,label:{scale:1,dx:0,dy:0},place:'corner',trans:true,bandColor:'#1D2669'};
 }
 
 /* ---------- state ---------- */
-const STORE='zab-molecule-bench-v1';
+const STORE='zab-cross-bench-v1';
 let state=null;
 try{const s=localStorage.getItem(STORE);if(s){const o=JSON.parse(s);if(o&&Array.isArray(o.products)&&o.products.length)state=o}}catch(e){}
 if(!state)state=defaults();
 state.products=state.products.map(p=>newProduct(p));
 if(!state.products.find(p=>p.id===state.current))state.current=state.products[0].id;
-if((state.ver||1)<3){state.products.forEach(p=>{p.gen.style='field';p.gen.density=.5;p.gen.seed=DEFAULT_SEEDS[p.name]||hashStr(p.name+'field');p.pal=LINES[p.line].cols.slice();applyField(p,state.rules)});state.ver=3;state.label={scale:1,dx:0,dy:0}}
-if(state.ver<4){const have=new Set(state.products.map(p=>p.name));EXAMPLES.forEach(e=>{if(!have.has(e.name))state.products.push(exampleProduct(e,state.rules))});state.products.forEach(p=>{if(p.bg==='#F8F3EF')p.bg='#FFFFFF'});state.ver=4}
 if(!state.bandColor)state.bandColor='#1D2669';
-if(state.ver<5){state.trans=true;state.ver=5}
-let sel=null,drag=null;
+if(!state.label)state.label={scale:1,dx:0,dy:0};
+let sel=null,stroke=null;
 const hist=[],redo=[];
 let saveT=null;
 function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(STORE,JSON.stringify(state))}catch(e){}},250)}
 const cur=()=>state.products.find(p=>p.id===state.current);
+const inGrid=(p,c,r)=>c>=0&&r>=0&&c<p.cols&&r<p.rows;
+function snapshot(p){return JSON.stringify(p.nodes)}
+function commit(p,snap){if(snapshot(p)!==snap){hist.push({pid:p.id,nodes:snap});if(hist.length>100)hist.shift();redo.length=0}renderAll();save()}
+function mutate(fn){const p=cur(),snap=snapshot(p);fn(p);commit(p,snap)}
+function defaultSize(p,c,r){let t=0,n=0;for(let dc=-1;dc<=1;dc++)for(let dr=-1;dr<=1;dr++){const m=p.nodes[key(c+dc,r+dr)];if(m&&(dc||dr)){t+=m.s;n++}}return n?Math.round(t/n*1000)/1000:0.3}
 
-function mutate(fn){
-  const p=cur(),snap=JSON.stringify(p.nodes);
-  const before=new Set(analyze(p,state.rules).issues.filter(i=>i.lvl!=='warn').map(i=>i.type+i.msg));
-  fn(p);
-  const fresh=analyze(p,state.rules).issues.filter(i=>i.lvl!=='warn').find(i=>!before.has(i.type+i.msg));
-  if(fresh){p.nodes=JSON.parse(snap);toast(BLOCK_MSG[fresh.type],'bad');renderAll();return false}
-  if(JSON.stringify(p.nodes)!==snap){hist.push({pid:p.id,nodes:snap});if(hist.length>100)hist.shift();redo.length=0}
-  renderAll();save();return true;
-}
-function ensure(p,c,r){const k=key(c,r);return p.nodes[k]||(p.nodes[k]={t:[0,0,0,0],o:1,color:null})}
-function link(p,c,r,q){ensure(p,c,r).t[q]=1;const pc=c+Q[q][0],pr=r+Q[q][1];if(inGridP(p,pc,pr))ensure(p,pc,pr).t[opp(q)]=1}
-function unlink(p,c,r,q){const n=p.nodes[key(c,r)];if(n)n.t[q]=0;const m=p.nodes[key(c+Q[q][0],r+Q[q][1])];if(m)m.t[opp(q)]=0}
-function delNode(p,c,r){const n=p.nodes[key(c,r)];if(!n)return;n.t.forEach((v,q)=>{if(v){const m=p.nodes[key(c+Q[q][0],r+Q[q][1])];if(m)m.t[opp(q)]=0}});delete p.nodes[key(c,r)]}
-
-/* ---------- rendering the pattern ---------- */
-function patternParts(p,idp,clean){
+/* ---------- rendering ---------- */
+function crossD(x,y,L){return `M${f(x-L)} ${f(y)}H${f(x+L)}M${f(x)} ${f(y-L)}V${f(y+L)}`}
+function patternParts(p,idp){
   const vb=[-H,-H,p.cols*D,p.rows*D];
-  const ks=Object.keys(p.nodes);
-  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
-  ks.forEach(k=>{const [c,r]=parseKey(k);x0=Math.min(x0,c*D-RR);y0=Math.min(y0,r*D-RR);x1=Math.max(x1,c*D+RR);y1=Math.max(y1,r*D+RR)});
-  if(!ks.length){x0=vb[0];y0=vb[1];x1=vb[0]+vb[2];y1=vb[1]+vb[3]}
-  const cx=(x0+x1)/2,cy=(y0+y1)/2,w=x1-x0,h=y1-y0,a=p.angle*Math.PI/180,vx=Math.sin(a),vy=Math.cos(a);
-  const L=(Math.abs(vx)*w+Math.abs(vy)*h)/2||1;
-  const defs=`<linearGradient id="${idp}g" gradientUnits="userSpaceOnUse" x1="${f(cx-vx*L)}" y1="${f(cy-vy*L)}" x2="${f(cx+vx*L)}" y2="${f(cy+vy*L)}"><stop offset="0" stop-color="${p.stops[0]}"/><stop offset=".5" stop-color="${p.stops[1]}"/><stop offset="1" stop-color="${p.stops[2]}"/></linearGradient>`;
-  let body='',nd='';
-  ks.sort().forEach((k,ix)=>{const n=p.nodes[k],[c,r]=parseKey(k);let fill=n.color||`url(#${idp}g)`;
-    if(p.mode==='field'){const col=nodeFill(p,n,c,r);nd+=`<linearGradient id="${idp}n${ix}" gradientUnits="userSpaceOnUse" x1="0" y1="${f(r*D-0.6*D)}" x2="0" y2="${f(r*D+0.6*D)}"><stop offset="0" stop-color="${hexMix(col,'#ffffff',0.18)}"/><stop offset="1" stop-color="${col}"/></linearGradient>`;fill=`url(#${idp}n${ix})`}
-    body+=`<path d="${nodePath(c*D,r*D,n.t)}" fill="${fill}"${n.o<1?` fill-opacity="${n.o}"`:''}${clean?'':` data-k="${k}"`}/>`});
-  return {defs:defs+nd,body,vb};
+  const ks=Object.keys(p.nodes).sort();
+  let defs='';
+  if(p.mode!=='field'){
+    let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+    ks.forEach(k=>{const [c,r]=parseKey(k);x0=Math.min(x0,c*D-H);y0=Math.min(y0,r*D-H);x1=Math.max(x1,c*D+H);y1=Math.max(y1,r*D+H)});
+    if(!ks.length){x0=vb[0];y0=vb[1];x1=vb[0]+vb[2];y1=vb[1]+vb[3]}
+    const cx=(x0+x1)/2,cy=(y0+y1)/2,w=x1-x0,h=y1-y0,a=p.angle*Math.PI/180,vx=Math.sin(a),vy=Math.cos(a),L=(Math.abs(vx)*w+Math.abs(vy)*h)/2||1;
+    defs=`<linearGradient id="${idp}g" gradientUnits="userSpaceOnUse" x1="${f(cx-vx*L)}" y1="${f(cy-vy*L)}" x2="${f(cx+vx*L)}" y2="${f(cy+vy*L)}"><stop offset="0" stop-color="${p.stops[0]}"/><stop offset=".5" stop-color="${p.stops[1]}"/><stop offset="1" stop-color="${p.stops[2]}"/></linearGradient>`;
+  }
+  let body=`<g fill="none" stroke-width="${f(p.stroke)}" stroke-linecap="${p.cap}">`;
+  ks.forEach(k=>{const n=p.nodes[k],[c,r]=parseKey(k);const col=p.mode==='field'?nodeFill(p,n,c,r):(n.color||`url(#${idp}g)`);
+    body+=`<path d="${crossD(c*D,r*D,n.s*p.sizeMul*D)}" stroke="${col}"${n.o<1?` stroke-opacity="${n.o}"`:''}/>`});
+  body+='</g>';
+  return {defs,body,vb};
 }
 function patternSVG(p,idp,withBg){
-  const pp=patternParts(p,idp,true),[x,y,w,h]=pp.vb;
+  const pp=patternParts(p,idp),[x,y,w,h]=pp.vb;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${pp.vb.join(' ')}" preserveAspectRatio="xMidYMid slice"><defs>${pp.defs}</defs>${withBg?`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${p.bg}"/>`:''}${pp.body}</svg>`;
 }
 function exportSVG(p,trans){
-  const pp=patternParts(p,'zab',true),[x,y,w,h]=pp.vb;
+  const pp=patternParts(p,'zab'),[x,y,w,h]=pp.vb;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${pp.vb.join(' ')}" width="${w*4}" height="${h*4}"><defs>${pp.defs}</defs>${trans?'':`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${p.bg}"/>`}${pp.body}</svg>`;
 }
 
 /* ---------- label mock ---------- */
 function labelSVG(p,place,idp){
   const W=600,Hh=640,navy='#1D2669',font="Montserrat,'Noto Sans SC',sans-serif";
-  const pp=patternParts(p,idp+'p',true),asp=pp.vb[2]/pp.vb[3];
+  const pp=patternParts(p,idp+'p');
   const band=place==='band'?{x:40,y:132,w:520,h:158}:{x:40,y:150,w:296,h:150};
   let pat='';
   if(place==='band'){
     pat=`<svg x="352" y="${band.y+8}" width="196" height="${band.h-16}" viewBox="${pp.vb.join(' ')}" preserveAspectRatio="xMidYMid meet" overflow="hidden"><defs>${pp.defs}</defs>${pp.body}</svg>`;
   }else{
-    const Lb=state.label;let w,h,x,y;
-    if(p.field){const u=32.55*Lb.scale;w=p.cols*u;h=p.rows*u;x=60+(p.field.ox-0.5)*u+Lb.dx;y=-75+(p.field.oy-0.5)*u+Lb.dy}
-    else{w=400*Lb.scale*(p.cols/6);h=w/asp;x=W-w*0.9+Lb.dx;y=-h*0.1+Lb.dy}
+    const Lb=state.label,u=23.1*Lb.scale;let w=p.cols*u,h=p.rows*u,x,y;
+    if(p.field){x=60+(p.field.ox-0.5)*u+Lb.dx;y=-75+(p.field.oy-0.5)*u+Lb.dy}else{x=W-w*0.9+Lb.dx;y=-h*0.1+Lb.dy}
     pat=`<g clip-path="url(#${idp}clip)"><svg x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" viewBox="${pp.vb.join(' ')}" overflow="visible"><defs>${pp.defs}</defs>${pp.body}</svg></g>`;
   }
   const name=(p.name||'').toUpperCase(),fs=Math.min(42,520/Math.max(1,name.length*0.74));
@@ -755,119 +571,90 @@ ${place==='band'?pat:''}
 </svg>`;
 }
 
-/* ---------- DOM refs ---------- */
+/* ---------- DOM ---------- */
 const $=s=>document.querySelector(s);
 const board=$('#board');
 
 function renderBrand(){
-  const p={cols:3,rows:2,angle:0,stops:LINES.repair.stops,nodes:{'0,1':{t:[0,0,0,1],o:1},'1,0':{t:[1,1,0,0],o:1},'2,1':{t:[0,0,1,0],o:1}}};
-  const pp=patternParts(p,'br',true);
+  const p={cols:3,rows:2,mode:'field',pal:LINES.repair.cols,stroke:12,sizeMul:1,cap:'butt',gen:{seed:1},field:null,
+    nodes:{'0,0':{s:.3,o:1,k:2},'1,0':{s:.42,o:1,k:4},'2,0':{s:.22,o:1,k:5},'0,1':{s:.22,o:1,k:3},'1,1':{s:.32,o:1,k:6},'2,1':{s:.38,o:1,k:7}}};
+  const pp=patternParts(p,'br');
   $('#brandIcon').innerHTML=`<svg viewBox="${pp.vb.join(' ')}"><defs>${pp.defs}</defs>${pp.body}</svg>`;
 }
-
 function renderTabs(){
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.view===state.view)));
   $('#v-edit').hidden=state.view!=='edit';$('#v-label').hidden=state.view!=='label';$('#v-series').hidden=state.view!=='series';
 }
-
 function renderRail(){
   $('#plist').innerHTML=state.products.map(p=>`<li><button class="item" data-pid="${p.id}" aria-current="${p.id===state.current}">
     <span class="thumb">${patternSVG(p,'th'+p.id,true)}</span>
     <span style="min-width:0"><span class="pname">${esc(p.name)}</span><span class="pline">${LINES[p.line]?LINES[p.line].name:''}${p.example?'<span class="tag">示例</span>':''}</span></span></button></li>`).join('');
 }
-
 function renderBoard(){
-  const p=cur(),M=D*0.24;
+  const p=cur(),M=D*0.3;
   board.setAttribute('viewBox',[-H-M,-H-M,p.cols*D+2*M,p.rows*D+2*M].map(f).join(' '));
   board.setAttribute('class','t-'+state.tool);
-  const pp=patternParts(p,'ed',false),ink=inkFor(p.bg),an=analyze(p,state.rules);
+  const pp=patternParts(p,'ed'),ink=inkFor(p.bg);
   let s=`<defs>${pp.defs}</defs><rect x="${-H}" y="${-H}" width="${p.cols*D}" height="${p.rows*D}" fill="${p.bg}"/>`;
   if(state.showGrid){
     s+=`<rect x="${-H}" y="${-H}" width="${p.cols*D}" height="${p.rows*D}" fill="none" stroke="${ink}" stroke-opacity=".28" stroke-dasharray="3 5" vector-effect="non-scaling-stroke"/>`;
-    for(let r=0;r<p.rows;r++)for(let c=0;c<p.cols;c++)s+=`<circle cx="${c*D}" cy="${r*D}" r="2.6" fill="${ink}" fill-opacity=".25"/>`;
+    for(let r=0;r<p.rows;r++)for(let c=0;c<p.cols;c++)if(!p.nodes[key(c,r)])s+=`<circle cx="${c*D}" cy="${r*D}" r="3" fill="${ink}" fill-opacity=".22"/>`;
   }
-  s+=`<g id="shapes">${pp.body}</g><g pointer-events="none">`;
-  if(sel&&p.nodes[key(sel.c,sel.r)])s+=`<circle cx="${sel.c*D}" cy="${sel.r*D}" r="${f(RR+7)}" fill="none" stroke="${ink}" stroke-width="2" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"/>`;
-  an.issues.forEach(i=>{
-    const col=i.lvl==='warn'?'#E08A1E':'#D2455C';
-    if(i.type==='z'||i.type==='many')s+=`<circle cx="${i.x*D}" cy="${i.y*D}" r="${f(RR+11)}" fill="none" stroke="${col}" stroke-width="2.5" vector-effect="non-scaling-stroke"/>`;
-    else s+=`<circle cx="${f(i.x*D)}" cy="${f(i.y*D)}" r="8" fill="${col}" fill-opacity=".18" stroke="${col}" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
-  });
-  s+=`</g><g id="ghost" pointer-events="none"></g>`;
+  s+=pp.body;
+  if(sel&&p.nodes[key(sel.c,sel.r)])s+=`<rect x="${sel.c*D-H+6}" y="${sel.r*D-H+6}" width="${D-12}" height="${D-12}" rx="10" fill="none" stroke="${ink}" stroke-width="2" stroke-dasharray="5 4" vector-effect="non-scaling-stroke" pointer-events="none"/>`;
   board.innerHTML=s;
   $('#colsV').textContent=p.cols;$('#rowsV').textContent=p.rows;
+  $('#countV').textContent=Object.keys(p.nodes).length+' 个十字';
   $('#showGrid').checked=!!state.showGrid;
   document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===state.tool)));
   $('#undoB').disabled=!hist.length;$('#redoB').disabled=!redo.length;
-  const HINTS={build:'<span><b>点格点</b> 放一个圆</span><span><b>从圆斜着拖到对角的格点</b> = 连接，自动变成单尖 / 双尖</span><span><b>拖一半松手</b> = 只加一个尖（伸到画布边就是出血）</span><span><b>点已有的圆</b> = 选中，在右侧细调</span>',
-    erase:'<span><b>点圆心</b> 删除整个圆</span><span><b>点尖</b> 拆开这一对连接</span>',
-    fade:'<span><b>点圆</b> 在 100% → 60% → 35% 透明度之间切换，用来做边缘淡出</span>'};
+  const HINTS={build:'<span><b>点格点</b> 加一个十字，按住拖动可以连续画</span><span><b>点已有的十字</b> = 选中，在右侧调大小、透明度、颜色</span>',
+    erase:'<span><b>点或拖过</b> 十字就删掉</span>',
+    size:'<span><b>点十字</b> 在 小 → 中 → 大 之间切换</span>',
+    fade:'<span><b>点十字</b> 在 100% → 60% → 35% 透明度之间切换</span>'};
   $('#hint').innerHTML=HINTS[state.tool];
 }
-
-function ghostNode(c,r,t,ink){return `<path d="${nodePath(c*D,r*D,t)}" fill="${ink}" fill-opacity=".22" stroke="${ink}" stroke-opacity=".6" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/>`}
-function renderGhost(){
-  const g=$('#ghost');if(!g)return;
-  const p=cur(),ink=inkFor(p.bg);
-  if(!drag||!drag.moved||drag.q==null){g.innerHTML='';return}
-  const {c,r,q,mode}=drag;
-  const n=p.nodes[key(c,r)],t=n?n.t.slice():[0,0,0,0];t[q]=1;
-  let s=ghostNode(c,r,t,ink);
-  const pc=c+Q[q][0],pr=r+Q[q][1];
-  if(mode==='link'&&inGridP(p,pc,pr)){const m=p.nodes[key(pc,pr)],t2=m?m.t.slice():[0,0,0,0];t2[opp(q)]=1;s+=ghostNode(pc,pr,t2,ink)}
-  g.innerHTML=s;
-}
-
 function renderInspector(){
   const p=cur();
-  // selection
   const n=sel&&p.nodes[key(sel.c,sel.r)];
   if(!n){
-    $('#selSec').innerHTML=`<h3>选中的圆</h3><p class="muted">用「搭建」工具点一下画布上的圆，就能在这里逐个开关它的四个尖、改透明度或单独上色。</p>`;
+    $('#selSec').innerHTML=`<h3>选中的十字</h3><p class="muted">用「添加」工具点一下画布上的十字，就能在这里单独调它的大小、透明度和颜色。</p>`;
   }else{
-    const cnt=tailCount(n),type=cnt===0?'圆点':cnt===1?'单尖':cnt===2?'双尖':'超出规则';
-    const fillNow=n.color||(p.mode==='field'?nodeFill(p,n,sel.c,sel.r):null);
-    const mini={cols:1,rows:1,angle:0,stops:p.stops,nodes:{'0,0':{t:n.t,o:1,color:fillNow}}};
-    const mp=patternParts(mini,'mi',true);
-    const btn=q=>`<button data-pad="${q}" aria-pressed="${!!n.t[q]}" title="${QNAME[q]}尖">${QARROW[q]}</button>`;
-    $('#selSec').innerHTML=`<h3>选中的圆 <span class="mono muted">(${sel.c},${sel.r}) · ${type}</span></h3>
-    <div class="selbox">
-      <div class="pad">${btn(2)}<span></span>${btn(3)}<span></span><span class="mid"><svg viewBox="${mp.vb.join(' ')}"><defs>${mp.defs}</defs>${mp.body}</svg></span><span></span>${btn(1)}<span></span>${btn(0)}</div>
-      <div class="stack">
-        <label class="field">透明度 <span class="mono">${Math.round(n.o*100)}%</span><input type="range" id="sOp" min="0.15" max="1" step="0.05" value="${n.o}"></label>
-        <label class="field">单独上色 <input type="color" id="sCol" value="${fillNow||p.stops[1]}"></label>
-        <div class="row"><button class="btn small" id="sColClr" ${n.color?'':'disabled'}>跟随渐变</button><button class="btn small danger" id="sDel">删除</button></div>
-      </div>
-    </div>`;
+    const col=p.mode==='field'?nodeFill(p,n,sel.c,sel.r):(n.color||p.stops[1]);
+    $('#selSec').innerHTML=`<h3>选中的十字 <span class="mono muted">(${sel.c},${sel.r})</span></h3>
+      <div class="selbox">
+        <svg viewBox="-50 -50 100 100" width="72" height="72" aria-hidden="true"><path d="${crossD(0,0,n.s*p.sizeMul*100)}" stroke="${col}" stroke-width="${p.stroke}" stroke-linecap="${p.cap}" fill="none"/></svg>
+        <div class="stack">
+          <label class="field">大小 <span class="mono">${Math.round(n.s*100)}</span><input type="range" id="sSize" min="0.08" max="0.5" step="0.01" value="${n.s}"></label>
+          <label class="field">透明度 <span class="mono">${Math.round(n.o*100)}%</span><input type="range" id="sOp" min="0.15" max="1" step="0.05" value="${n.o}"></label>
+          <label class="field">单独上色 <input type="color" id="sCol" value="${col.toLowerCase()}"></label>
+          <div class="row"><button class="btn small" id="sColClr" ${n.color?'':'disabled'}>跟随色彩</button><button class="btn small danger" id="sDel">删除</button></div>
+        </div>
+      </div>`;
   }
-  // rules
-  const an=analyze(p,state.rules),st=an.st;
-  const nWarn=an.issues.filter(i=>i.lvl==='warn').length,nBad=an.issues.length-nWarn;
-  $('#stats').innerHTML=[['圆点',st.dot],['单尖',st.single],['双尖',st.double],['连接',st.links],['出血尖',st.bleed],['未接上',st.dangling]]
-    .map(([l,v],i)=>`<div class="stat${i===5&&v?' warn':''}"><b>${v}</b><span>${l}</span></div>`).join('');
-  $('#issueBox').innerHTML=an.issues.length?`<ul class="issues">${an.issues.map(i=>`<li class="${i.lvl}">${esc(i.msg)}</li>`).join('')}</ul>`:`<p class="ok-line">全部符合规则</p>`;
-  if(nBad)$('#issueBox').insertAdjacentHTML('afterbegin',`<p class="muted" style="color:var(--bad);margin-bottom:4px">${nBad} 处违反当前规则</p>`);
-  $('#ruleDD').checked=!!state.rules.dd;$('#ruleZ').checked=!!state.rules.z;
-  // color
-  $('#lineChips').innerHTML=Object.entries(LINES).map(([k,v])=>`<button class="chip" data-line="${k}" aria-pressed="${p.line===k}"><i style="background:linear-gradient(${(p.mode==='field'?v.cols.slice(0,8):v.stops).join(',')})"></i>${v.name}</button>`).join('');
+  $('#stroke').value=p.stroke;$('#strokeV').textContent=p.stroke;
+  $('#sizeMul').value=p.sizeMul;$('#scaleV').textContent=Math.round(p.sizeMul*100)+'%';
+  document.querySelectorAll('[data-cap]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.cap===p.cap)));
+  $('#lineChips').innerHTML=Object.entries(LINES).map(([k,v])=>`<button class="chip" data-line="${k}" aria-pressed="${p.line===k}"><i style="background:linear-gradient(${v.cols.join(',')})"></i>${v.name}</button>`).join('');
   document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===p.mode)));
   $('#palBox').hidden=p.mode!=='field';$('#gradBox').hidden=p.mode==='field';
-  document.querySelectorAll('#palGrid input').forEach((el,i)=>{if(document.activeElement!==el)el.value=p.pal[i]});
-  if(document.activeElement!==$('#palAcc'))$('#palAcc').value=p.pal[8];
-  document.querySelectorAll('.nofield').forEach(el=>{el.hidden=p.gen.style==='field'});
-  ['c0','c1','c2'].forEach((id,i)=>{$('#'+id).value=p.stops[i]});
+  document.querySelectorAll('#palGrid input').forEach((el,i)=>{if(document.activeElement!==el)el.value=p.pal[i].toLowerCase()});
+  ['c0','c1','c2'].forEach((id,i)=>{$('#'+id).value=p.stops[i].toLowerCase()});
   $('#ang').value=p.angle;$('#angV').textContent=p.angle===0?'上 → 下':p.angle+'°';
-  $('#bgc').value=p.bg;
-  // generator
-  $('#gStyle').value=p.gen.style;$('#gDens').value=p.gen.density;$('#gTight').value=p.gen.tight;$('#gAccent').checked=!!p.gen.accent;$('#gBleed').checked=!!p.gen.bleed;
+  $('#bgc').value=p.bg.toLowerCase();
+  $('#gDens').value=p.gen.density;
   $('#seedV').textContent='#'+(p.gen.seed>>>0).toString(36).toUpperCase();
-  // info
+  $('#xTrans').checked=!!state.trans;
   if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#infoSec'))return;
   $('#iName').value=p.name;$('#iLine').innerHTML=Object.entries(LINES).map(([k,v])=>`<option value="${k}" ${p.line===k?'selected':''}>${v.name}</option>`).join('');
   $('#iB0').value=p.band[0]||'';$('#iB1').value=p.band[1]||'';$('#iB2').value=p.band[2]||'';
   $('#iCount').value=p.count||'';$('#iServ').value=p.servings||'';
 }
-
+function syncBand(){
+  for(const sfx of ['','2']){const h=$('#bandHex'+sfx),pk=$('#bandPick'+sfx);if(!h)continue;
+    if(document.activeElement!==h){h.value=state.bandColor;h.classList.remove('bad')}
+    if(document.activeElement!==pk)pk.value=state.bandColor.toLowerCase();}
+}
 function renderLabels(){
   const p=cur();
   $('#labA').innerHTML=labelSVG(p,'band','la');
@@ -880,14 +667,8 @@ function renderSeries(){
   document.querySelectorAll('[data-place]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.place===state.place)));
   $('#seriesGrid').innerHTML=state.products.map(p=>`<button class="scard" data-pid="${p.id}" aria-current="${p.id===state.current}">
     ${labelSVG(p,state.place,'s'+p.id)}
-    <div class="smeta"><span style="min-width:0"><span class="pname">${esc(p.name)}</span><span class="pline">${LINES[p.line]?LINES[p.line].name:''} · ${STYLE_NAME[p.gen.style]||''}${p.example?'<span class="tag">示例</span>':''}</span></span>
-    <span class="swatches">${p.stops.map(c=>`<i style="background:${c}"></i>`).join('')}</span></div></button>`).join('');
-}
-
-function syncBand(){
-  for(const sfx of ['','2']){const h=$('#bandHex'+sfx),pk=$('#bandPick'+sfx);if(!h)continue;
-    if(document.activeElement!==h){h.value=state.bandColor;h.classList.remove('bad')}
-    if(document.activeElement!==pk)pk.value=state.bandColor.toLowerCase();}
+    <div class="smeta"><span style="min-width:0"><span class="pname">${esc(p.name)}</span><span class="pline">${LINES[p.line]?LINES[p.line].name:''}${p.example?'<span class="tag">示例</span>':''}</span></span>
+    <span class="swatches">${[p.pal[1],p.pal[4],p.pal[7]].map(c=>`<i style="background:${c}"></i>`).join('')}</span></div></button>`).join('');
 }
 function renderAll(){
   renderTabs();renderRail();
@@ -897,55 +678,34 @@ function renderAll(){
   renderInspector();
 }
 
-/* ---------- toast ---------- */
 let toastT=null;
 function toast(msg,kind){const t=$('#toast');t.textContent=msg;t.className='show'+(kind==='bad'?' bad':'');clearTimeout(toastT);toastT=setTimeout(()=>{t.className=kind==='bad'?'bad':''},2200)}
 
 /* ---------- board interaction ---------- */
-function toGrid(e){const pt=board.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const m=board.getScreenCTM();const q=pt.matrixTransform(m.inverse());return {x:q.x/D,y:q.y/D}}
-function quadOf(dx,dy){const sx=dx>=0?1:-1,sy=dy>=0?1:-1;return Q.findIndex(([a,b])=>a===sx&&b===sy)}
-board.addEventListener('pointerdown',e=>{
-  if(e.button!==0)return;
-  const p=cur(),g=toGrid(e),c=Math.round(g.x),r=Math.round(g.y),dist=Math.hypot(g.x-c,g.y-r);
-  const hitK=e.target&&e.target.dataset?e.target.dataset.k:null;
+function toGrid(e){const pt=board.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(board.getScreenCTM().inverse());return {x:q.x/D,y:q.y/D}}
+function cellAt(e){const g=toGrid(e),c=Math.round(g.x),r=Math.round(g.y);return {c,r,ok:inGrid(cur(),c,r)&&Math.hypot(g.x-c,g.y-r)<0.6}}
+function applyTool(p,c,r,first){
+  const k=key(c,r),n=p.nodes[k];
   if(state.tool==='build'){
-    if(inGridP(p,c,r)&&dist<0.45){drag={c,r,moved:false,q:null,mode:null};board.setPointerCapture(e.pointerId)}
-  }else if(state.tool==='erase'){
-    let k=hitK;
-    if(!k&&p.nodes[key(c,r)]&&dist<0.45)k=key(c,r);
-    if(!k)return;
-    const [nc,nr]=parseKey(k),d=Math.hypot(g.x-nc,g.y-nr)*D;
-    if(d<=RR+3)mutate(pp=>{delNode(pp,nc,nr);if(sel&&sel.c===nc&&sel.r===nr)sel=null});
-    else{const q=quadOf(g.x-nc,g.y-nr);if(p.nodes[k].t[q])mutate(pp=>unlink(pp,nc,nr,q))}
-  }else if(state.tool==='fade'){
-    let k=hitK;if(!k&&p.nodes[key(c,r)]&&dist<0.45)k=key(c,r);if(!k)return;
-    mutate(pp=>{const n=pp.nodes[k];n.o=n.o>0.9?0.6:n.o>0.5?0.35:1});
-  }
+    if(n){if(first)sel={c,r};return}
+    p.nodes[k]={s:defaultSize(p,c,r),o:1,k:null,color:null};if(first)sel={c,r};
+  }else if(state.tool==='erase'){if(n){delete p.nodes[k];if(sel&&sel.c===c&&sel.r===r)sel=null}}
+  else if(state.tool==='size'){if(n&&first){n.s=n.s<0.25?0.32:n.s<0.4?0.46:0.2;sel={c,r}}}
+  else if(state.tool==='fade'){if(n&&first){n.o=n.o>0.9?0.6:n.o>0.5?0.35:1;sel={c,r}}}
+}
+board.addEventListener('pointerdown',e=>{
+  if(e.button!==0)return;const h=cellAt(e);if(!h.ok)return;
+  const p=cur();stroke={snap:snapshot(p),last:key(h.c,h.r)};board.setPointerCapture(e.pointerId);
+  applyTool(p,h.c,h.r,true);renderBoard();
 });
 board.addEventListener('pointermove',e=>{
-  if(!drag)return;
-  const g=toGrid(e),dx=g.x-drag.c,dy=g.y-drag.r,len=Math.hypot(dx,dy);
-  if(len>0.28&&Math.abs(dx)>0.1&&Math.abs(dy)>0.1){drag.moved=true;drag.q=quadOf(dx,dy);drag.mode=len>=1.0?'link':'tail'}
-  else if(len>0.28){drag.moved=true;drag.q=null}
-  else{drag.q=null}
-  renderGhost();
+  if(!stroke||(state.tool!=='build'&&state.tool!=='erase'))return;
+  const h=cellAt(e);if(!h.ok)return;const k=key(h.c,h.r);if(k===stroke.last)return;stroke.last=k;
+  applyTool(cur(),h.c,h.r,false);renderBoard();
 });
-function endDrag(e){
-  if(!drag)return;
-  const d=drag;drag=null;renderGhost();
-  const p=cur();
-  if(!d.moved||d.q==null){
-    if(d.moved)return;
-    if(p.nodes[key(d.c,d.r)]){sel={c:d.c,r:d.r};renderAll()}
-    else{sel={c:d.c,r:d.r};mutate(pp=>ensure(pp,d.c,d.r))}
-    return;
-  }
-  sel={c:d.c,r:d.r};
-  if(d.mode==='link')mutate(pp=>link(pp,d.c,d.r,d.q));
-  else mutate(pp=>{ensure(pp,d.c,d.r).t[d.q]=1});
-}
-board.addEventListener('pointerup',endDrag);
-board.addEventListener('pointercancel',()=>{drag=null;renderGhost()});
+function endStroke(){if(!stroke)return;const s=stroke;stroke=null;commit(cur(),s.snap)}
+board.addEventListener('pointerup',endStroke);
+board.addEventListener('pointercancel',endStroke);
 
 /* ---------- controls ---------- */
 document.addEventListener('click',e=>{
@@ -957,26 +717,20 @@ document.addEventListener('click',e=>{
   if(t.dataset.place){state.place=t.dataset.place;renderAll();save();return}
   if(t.dataset.line){p.line=t.dataset.line;p.stops=LINES[p.line].stops.slice();p.pal=LINES[p.line].cols.slice();renderAll();save();return}
   if(t.dataset.mode){p.mode=t.dataset.mode;renderAll();save();return}
-  if(t.dataset.pad!=null&&sel){
-    const q=+t.dataset.pad,n=p.nodes[key(sel.c,sel.r)];if(!n)return;
-    if(n.t[q])mutate(pp=>unlink(pp,sel.c,sel.r,q));
-    else{const pc=sel.c+Q[q][0],pr=sel.r+Q[q][1];if(p.nodes[key(pc,pr)])mutate(pp=>link(pp,sel.c,sel.r,q));else mutate(pp=>{pp.nodes[key(sel.c,sel.r)].t[q]=1})}
-    return;
-  }
+  if(t.dataset.cap){p.cap=t.dataset.cap;renderAll();save();return}
   if(t.dataset.step){
     const [dim,dv]=t.dataset.step.split(':');const v=Math.max(2,Math.min(40,p[dim]+(+dv)));if(v===p[dim])return;
-    mutate(pp=>{pp[dim]=v;for(const k of Object.keys(pp.nodes)){const [c,r]=parseKey(k);if(!inGridP(pp,c,r))delete pp.nodes[k]}});return;
+    mutate(pp=>{pp[dim]=v;for(const k of Object.keys(pp.nodes)){const [c,r]=parseKey(k);if(!inGrid(pp,c,r))delete pp.nodes[k]}});return;
   }
   switch(t.id){
     case 'undoB':undo();break;
     case 'redoB':redoF();break;
-    case 'clearB':if(t.dataset.armed){delete t.dataset.armed;t.textContent='清空画布';mutate(pp=>{pp.nodes={}});sel=null}else{t.dataset.armed='1';t.textContent='再点一次确认清空';setTimeout(()=>{if(t.dataset.armed){delete t.dataset.armed;t.textContent='清空画布'}},2500)}break;
+    case 'clearB':if(t.dataset.armed){delete t.dataset.armed;t.textContent='清空画布';sel=null;mutate(pp=>{pp.nodes={}})}else{t.dataset.armed='1';t.textContent='再点一次确认清空';setTimeout(()=>{if(t.dataset.armed){delete t.dataset.armed;t.textContent='清空画布'}},2500)}break;
     case 'sColClr':mutate(pp=>{pp.nodes[key(sel.c,sel.r)].color=null});break;
-    case 'sDel':mutate(pp=>delNode(pp,sel.c,sel.r));sel=null;renderAll();break;
-    case 'genName':p.gen.seed=hashStr(p.name+p.gen.style);regen();break;
+    case 'sDel':{const s=sel;sel=null;mutate(pp=>{delete pp.nodes[key(s.c,s.r)]});break}
+    case 'genName':p.gen.seed=hashStr(p.name+'cross');regen();break;
     case 'genNext':p.gen.seed=(p.gen.seed+1)>>>0;regen();break;
-    case 'loadFig1':mutate(pp=>{pp.cols=6;pp.rows=5;pp.field=null;pp.mode='gradient';pp.nodes=fig1Nodes()});sel=null;toast('已载入图1原稿');break;
-    case 'addP':{const np=newProduct({name:'New Product',line:'repair'});np.gen.seed=hashStr(np.id);applyField(np,state.rules);state.products.push(np);state.current=np.id;sel=null;renderAll();save();toast('已新建，可在「产品信息」里改名');break}
+    case 'addP':{const np=newProduct({name:'New Product',line:'repair'});np.gen.seed=hashStr(np.id);applyField(np);state.products.push(np);state.current=np.id;sel=null;renderAll();save();toast('已新建，可在「产品信息」里改名');break}
     case 'dupP':{const np=newProduct(JSON.parse(JSON.stringify(p)));np.id=uid();np.name=p.name+' 副本';np.example=false;state.products.push(np);state.current=np.id;renderAll();save();break}
     case 'delP':
       if(state.products.length<2){toast('至少保留一个产品','bad');break}
@@ -987,33 +741,34 @@ document.addEventListener('click',e=>{
     case 'dlSvg':download(slug(p.name)+'-pattern.svg',new Blob([exportSVG(p,state.trans)],{type:'image/svg+xml'}));break;
     case 'dlPng':downloadPNG(p,state.trans);break;
     case 'quickPng':downloadPNG(p,true);break;
-    case 'jsonOut':{const box=$('#jsonBox');box.value=JSON.stringify({products:state.products,rules:state.rules},null,1);box.select();copyText(box.value,'方案已导出并复制');break}
-    case 'jsonIn':{try{const o=JSON.parse($('#jsonBox').value);if(!o||!Array.isArray(o.products)||!o.products.length)throw 0;state.products=o.products.map(x=>newProduct(x));if(o.rules)state.rules=o.rules;state.current=state.products[0].id;sel=null;renderAll();save();toast('已导入 '+state.products.length+' 个产品')}catch(err){toast('这段文本不是有效的方案数据','bad')}break}
+    case 'jsonOut':{const box=$('#jsonBox');box.value=JSON.stringify({products:state.products},null,1);box.select();copyText(box.value,'方案已导出并复制');break}
+    case 'jsonIn':{try{const o=JSON.parse($('#jsonBox').value);if(!o||!Array.isArray(o.products)||!o.products.length)throw 0;state.products=o.products.map(x=>newProduct(x));state.current=state.products[0].id;sel=null;renderAll();save();toast('已导入 '+state.products.length+' 个产品')}catch(err){toast('这段文本不是有效的方案数据','bad')}break}
   }
 });
-function regen(){const p=cur();sel=null;const ok=mutate(pp=>{if(pp.gen.style==='field')applyField(pp,state.rules);else{if(pp.field){pp.cols=7;pp.rows=6;pp.field=null}pp.nodes=generateNodes(pp,pp.gen,state.rules)}});if(ok)toast('已生成 · '+STYLE_NAME[p.gen.style]+'结构')}
-function undo(){const h=hist.pop();if(!h)return;const p=state.products.find(x=>x.id===h.pid);if(!p){renderAll();return}redo.push({pid:p.id,nodes:JSON.stringify(p.nodes)});p.nodes=JSON.parse(h.nodes);state.current=p.id;renderAll();save()}
-function redoF(){const h=redo.pop();if(!h)return;const p=state.products.find(x=>x.id===h.pid);if(!p){renderAll();return}hist.push({pid:p.id,nodes:JSON.stringify(p.nodes)});p.nodes=JSON.parse(h.nodes);state.current=p.id;renderAll();save()}
+function regen(){sel=null;mutate(pp=>applyField(pp));toast('已生成新排列')}
+function undo(){const h=hist.pop();if(!h)return;const p=state.products.find(x=>x.id===h.pid);if(!p){renderAll();return}redo.push({pid:p.id,nodes:snapshot(p)});p.nodes=JSON.parse(h.nodes);state.current=p.id;renderAll();save()}
+function redoF(){const h=redo.pop();if(!h)return;const p=state.products.find(x=>x.id===h.pid);if(!p){renderAll();return}hist.push({pid:p.id,nodes:snapshot(p)});p.nodes=JSON.parse(h.nodes);state.current=p.id;renderAll();save()}
 
 document.addEventListener('input',e=>{
   const t=e.target,p=cur();
-  if(t.dataset&&t.dataset.pal!=null){p.pal[+t.dataset.pal]=t.value;renderAll();save();return}
+  if(t.dataset&&t.dataset.pal!=null){p.pal[+t.dataset.pal]=t.value.toUpperCase();renderAll();save();return}
   switch(t.id){
     case 'c0':case 'c1':case 'c2':p.stops[+t.id[1]]=t.value;break;
     case 'ang':p.angle=+t.value;break;
-    case 'palAcc':p.pal[8]=t.value;break;
-    case 'bgc':p.bg=t.value;break;
+    case 'bgc':p.bg=t.value.toUpperCase();break;
+    case 'stroke':p.stroke=+t.value;break;
+    case 'sizeMul':p.sizeMul=+t.value;break;
     case 'gDens':p.gen.density=+t.value;return save();
-    case 'gTight':p.gen.tight=+t.value;return save();
+    case 'sSize':{const n=p.nodes[key(sel.c,sel.r)];if(n)n.s=+t.value;t.previousElementSibling.textContent=Math.round(n.s*100);renderBoard();renderRail();save();return}
     case 'sOp':{const n=p.nodes[key(sel.c,sel.r)];if(n)n.o=+t.value;t.previousElementSibling.textContent=Math.round(n.o*100)+'%';renderBoard();renderRail();save();return}
-    case 'sCol':{const n=p.nodes[key(sel.c,sel.r)];if(n)n.color=t.value;renderBoard();renderRail();save();return}
+    case 'sCol':{const n=p.nodes[key(sel.c,sel.r)];if(n)n.color=t.value.toUpperCase();renderBoard();renderRail();save();return}
     case 'lScale':state.label.scale=+t.value;break;
+    case 'lDx':state.label.dx=+t.value;break;
+    case 'lDy':state.label.dy=+t.value;break;
     case 'bandHex':case 'bandHex2':{let v=t.value.trim();if(v&&v[0]!=='#')v='#'+v;const m=/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.exec(v);
       if(!m){t.classList.toggle('bad',v.length>1);return}
       let hx=m[1];if(hx.length===3)hx=hx.split('').map(c=>c+c).join('');state.bandColor='#'+hx.toUpperCase();t.classList.remove('bad');break}
     case 'bandPick':case 'bandPick2':state.bandColor=t.value.toUpperCase();break;
-    case 'lDx':state.label.dx=+t.value;break;
-    case 'lDy':state.label.dy=+t.value;break;
     case 'iName':p.name=t.value;break;
     case 'iB0':case 'iB1':case 'iB2':p.band[+t.id[2]]=t.value;break;
     case 'iCount':p.count=t.value;break;
@@ -1026,11 +781,6 @@ document.addEventListener('change',e=>{
   const t=e.target,p=cur();
   switch(t.id){
     case 'showGrid':state.showGrid=t.checked;break;
-    case 'ruleDD':state.rules.dd=t.checked;break;
-    case 'ruleZ':state.rules.z=t.checked;break;
-    case 'gStyle':p.gen.style=t.value;break;
-    case 'gAccent':p.gen.accent=t.checked;break;
-    case 'gBleed':p.gen.bleed=t.checked;break;
     case 'iLine':p.line=t.value;p.stops=LINES[t.value].stops.slice();p.pal=LINES[t.value].cols.slice();break;
     case 'xTrans':state.trans=t.checked;break;
     default:return;
@@ -1043,31 +793,29 @@ document.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&k==='z'){e.preventDefault();e.shiftKey?redoF():undo();return}
   if((e.ctrlKey||e.metaKey)&&k==='y'){e.preventDefault();redoF();return}
   if(e.ctrlKey||e.metaKey||e.altKey)return;
-  if(k==='b'||k==='e'||k==='f'){state.tool={b:'build',e:'erase',f:'fade'}[k];renderAll();save()}
-  if((k==='delete'||k==='backspace')&&sel&&cur().nodes[key(sel.c,sel.r)]){e.preventDefault();const s=sel;mutate(pp=>delNode(pp,s.c,s.r));sel=null;renderAll()}
+  if(k in {b:1,e:1,s:1,f:1}){state.tool={b:'build',e:'erase',s:'size',f:'fade'}[k];renderAll();save()}
+  if((k==='delete'||k==='backspace')&&sel&&cur().nodes[key(sel.c,sel.r)]){e.preventDefault();const s=sel;sel=null;mutate(pp=>{delete pp.nodes[key(s.c,s.r)]})}
 });
 
-/* ---------- export helpers ---------- */
-/* Saving files: inside claude.ai the page asks the viewer through the downloads capability;
-   opened as a local file it uses a normal browser download. */
+/* ---------- saving files ---------- */
 let topLevel=true;try{topLevel=window.self===window.top}catch(e){topLevel=false}
 let dlApi=null;
 function setDlUI(){const ok=topLevel||!!dlApi;$('#dlRow').hidden=false;$('#quickPng').hidden=false;$('#dlNote').hidden=ok}
 setDlUI();
 (async()=>{try{if(window.claude&&typeof window.claude.use==='function'){dlApi=await window.claude.use('downloads')}}catch(e){dlApi=null}setDlUI()})();
-$('#xTrans').checked=!!state.trans;
 function slug(s){return (s||'pattern').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'pattern'}
 function download(name,blob){
   if(dlApi){dlApi.save({filename:name,data:blob}).then(()=>toast('已保存 '+name),e=>{const c=e&&e.code;if(c==='declined')return;toast(c==='rate_limited'?'上一个保存还没完成，稍等再试':'这里暂时不能保存文件，可改用「复制 SVG 代码」','bad')});return}
   if(!topLevel){if(/\.png$/.test(name))showImage(blob,name);else copyText(exportSVG(cur(),state.trans),'已复制 SVG 代码');return}
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+}
 function showImage(blob,name){
   let ov=$('#imgOv');
   if(!ov){ov=document.createElement('div');ov.id='imgOv';ov.setAttribute('role','dialog');ov.setAttribute('aria-label','导出的图片');
     ov.style.cssText='position:fixed;inset:0;z-index:30;background:rgba(10,12,30,.72);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px';
     ov.innerHTML='<p style="margin:0;color:#fff;font-weight:600;text-align:center">在图片上右键「图片另存为」（手机长按保存），底色是透明的</p><img alt="" style="max-width:min(90vw,900px);max-height:72vh;background:repeating-conic-gradient(#e6e6ec 0% 25%,#fff 0% 50%) 0 0/20px 20px;border-radius:6px"><button class="btn" type="button">关闭</button>';
     ov.addEventListener('click',e=>{if(e.target===ov||e.target.tagName==='BUTTON')ov.remove()});document.body.appendChild(ov)}
-  const im=ov.querySelector('img');im.src=URL.createObjectURL(blob);im.title=name;
+  ov.querySelector('img').src=URL.createObjectURL(blob);
 }
 function downloadPNG(p,trans){
   const img=new Image();
